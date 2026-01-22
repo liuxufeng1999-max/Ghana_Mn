@@ -1,6 +1,6 @@
 /* Water Sample */
 cd "$master_loc"
- **TestTestTest
+
 
 **# Sample ID Extraction
 
