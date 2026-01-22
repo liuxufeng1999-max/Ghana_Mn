@@ -1,0 +1,66 @@
+# Data files
+*.dta
+*.csv
+*.xlsx
+*.xls
+*.txt
+*.dat
+*.sav
+*.rds
+*.rda
+*.RData
+
+# Output files
+*.log
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.svg
+*.eps
+*.tif
+*.tiff
+
+# Tables and results
+*.tex
+*.html
+*.rtf
+*.doc
+*.docx
+
+# Directories
+data/
+output/
+figures/
+tables/
+results/
+graphs/
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+~*
+.~lock.*
+
+# Stata specific
+*.smcl
+*.gph
+*.dct
+
+# R specific
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Keep code files (explicitly NOT ignored)
+# .do (Stata)
+# .R (R scripts)
+# .Rmd (R Markdown)
+# .ado (Stata programs)
