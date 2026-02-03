@@ -15,9 +15,10 @@ Special Notes:
 **# Specify some do file locations
 **Note: we will use relative file path (relative to this master do file location)
 
-global master_loc "C:\Users\liu.7133\Dropbox\Ghana Illegal Mining\04_Data\Water_Sampling" //<-- Change if needed
+global master_loc "C:\Users\liu.7133\Github_Repo\Ghana_Mn\Codes" //<-- Change if needed
 global cryptomator_loc "D:\Foundation First Pilot\05_Water Sampling" //<-- Change if needed
-global proc_dta_loc "$master_loc\Processed Stata Dta" //<-- Relative file path, no need to change
+global proc_dta_loc "..\Processed Stata Dta" //<-- Relative file path, no need to change
+capture mkdir "..\Processed Stata Dta"
 
 cd "$master_loc"
 ls
@@ -26,16 +27,6 @@ ls
 **This do file extract the IPA-shared sample log data and generate the master sample ID files shared with Taylor for result entries
 cd "$master_loc"
 do 1.Sample_ID_Extraction.do
-
-
-
-
-**# Test Strip Sample Processing
-**We also collect some samples using test strips (39 in total). This do file extract those information and visualize the results
-cd "$master_loc"
-do 2.Test_Strip_Samples.do
-
-
 
 
 **# Lab result processing
@@ -47,14 +38,14 @@ do 3.Lab_Result_Processing.do
 
 
 **# Evaluation
-**Run the analysis - Considering both Mn and non-Mn metals
+**Some pre-processings and descriptive statistics
+**Descriptives: Kdensity Plots + Balance Tables
 cd "$master_loc"
 do 4.Evaluation.do
 
 
 **# Evaluation: Mn Specific
 **Run the analysis - focus on Mn
-**Descriptives: Kdensity Plots + Balance Tables
 **Empiricals: Mn exposure and Child Development (with other alternative outcomes)
 **Specials: Extra exposure by school kids
 cd "$master_loc"

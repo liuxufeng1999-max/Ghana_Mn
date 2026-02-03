@@ -2,24 +2,34 @@
 ## LOAD PACKAGES
 ##------------------------
 
-library(dplyr)
-library(sf)
-library(ggplot2)
-library(igraph)
-library(FNN)
-library(sfnetworks)
-library(geosphere)  # for distance calculations
-library(ggspatial)  # optional for basemap or scalebar
-library(cowplot)  # for inset plotting
-library(ggspatial)  # optional scalebar/compass
-library(viridis) #<-- Colors
-library(scico) #<-- more color plates
-# library(rgee)
-library(rnaturalearth)
-library(rnaturalearthdata)
-library(patchwork)
+# List of required packages
+packages <- c(
+  "svglite",         # for saving svg plots
+  "dplyr",
+  "sf",
+  "ggplot2",
+  "igraph",
+  "FNN",
+  "sfnetworks",
+  "geosphere",       # for distance calculations
+  "ggspatial",       # optional for basemap or scalebar/compass
+  "cowplot",         # for inset plotting
+  "viridis",         # colors
+  "scico",           # more color palettes
+  "rnaturalearth",
+  "rnaturalearthdata",
+  "patchwork",
+  "rstudioapi"      # to set working directory to source file location
+)
 
-## Do NOT CHANGE -- R SCRIPT IS SAVED WITH THE SAME FOLDER AS THE MASTER DO FILE 
+# Install if missing, then load all
+invisible(lapply(packages, function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) install.packages(pkg)
+  library(pkg, character.only = TRUE)
+}))
+
+
+## Do NOT CHANGE -- R SCRIPT IS SAVED WITH THE SAME FOLDER AS THE MASTER DO FILE
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ##------------------------
@@ -29,14 +39,14 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ##Get the sample coordinates
 data <- read.csv("../Output/Feed_into_GEE_Test_Results_with_GPS.csv")
 
-##Get the Dustrict Boundaries 
-boundary <- st_read(dsn="../Original Data/Spatial/dhsboundaries/shps", layer="sdr_subnational_boundaries") 
-wboundary <- boundary[boundary$REGNAME == "Western" | boundary$REGNAME == "Western North" 
+##Get the Dustrict Boundaries
+boundary <- st_read(dsn="../Original Data/Spatial/dhsboundaries/shps", layer="sdr_subnational_boundaries") # nolint
+wboundary <- boundary[boundary$REGNAME == "Western" | boundary$REGNAME == "Western North"
                       | boundary$REGNAME == "Ashanti" | boundary$REGNAME == "Ahafo" |
                         boundary$REGNAME == "Central" | boundary$REGNAME == "Bono", ]
 wboundary_utm <- st_transform(wboundary, crs = 32630)
 
-districts <- st_read(dsn="../Original Data/Spatial/districts_archub", layer="9c121d63-5e62-4264-bb0e-6b7204bb60ee202045-1-3k41f2.tl238") 
+districts <- st_read(dsn="../Original Data/Spatial/districts_archub", layer="9c121d63-5e62-4264-bb0e-6b7204bb60ee202045-1-3k41f2.tl238")
 st_bbox(boundary)
 st_bbox(districts)
 target_crs <- st_crs(boundary)
@@ -50,14 +60,17 @@ all_dist <- districts[districts$DISTRICT == "SEFWI-WIAWSO" |
 
 # Full African continent (countries)
 africa_boundary <- ne_countries(continent = "Africa", returnclass = "sf")
+west_africa <- ne_countries(continent = "Africa", returnclass = "sf") %>%
+  filter(subregion == "Western Africa")
+
 
 # Ghana boundary only
 ghana_boundary <- ne_countries(country = "Ghana", returnclass = "sf")
 
 
-##Get the River lines from GEE 
-rivers <- st_read(dsn = "../Original Data/Spatial/GEE_HydroShed_River", 
-                  layer = "HydroSHEDS_rivers_buffer") 
+##Get the River lines from GEE
+rivers <- st_read(dsn = "../Original Data/Spatial/GEE_HydroShed_River",
+                  layer = "HydroSHEDS_rivers_buffer")
 rivers_utm <- st_transform(rivers, crs = 32630)
 
 # Crop rivers to Ghana extent for clarity
@@ -68,7 +81,7 @@ rivers_in_ghana <- st_intersection(rivers_utm, st_buffer(ghana_boundary_proj, 50
 ## FURTHER PROCESSING
 ##------------------------
 
-## Process the sampling Coordinates 
+## Process the sampling Coordinates
 data_clean <- data %>%
   filter(!is.na(GPS_lat), !is.na(GPS_long), !is.na(Mn))
 
@@ -81,27 +94,20 @@ points_sf_utm <- st_transform(points_sf, crs = 32630) # UTM zone appropriate for
 points_sf_utm$Mn_LODsq2 <- points_sf_utm$Mn
 points_sf_utm$Mn_LODsq2[points_sf_utm$Batch == 1 & points_sf_utm$Mn == 0] <- 2.953 / sqrt(2)
 points_sf_utm$Mn_LODsq2[points_sf_utm$Batch == 2 & points_sf_utm$Mn == 0] <- 3.282 / sqrt(2)
+points_sf_utm$log_Mn_LODsq2 <- log(points_sf_utm$Mn_LODsq2)
 
-# Compute spatial median Mn in a 2 km radius for each point
-median_Mn_1km <- sapply(1:nrow(points_sf_utm), function(i) {
-  distances <- st_distance(points_sf_utm[i, ], points_sf_utm)
-  nearby <- which(as.numeric(distances) <= 2000)  # within 2 km
-  median(points_sf_utm$Mn[nearby], na.rm = TRUE)
-})
-points_sf_utm$Mn_median_1km <- median_Mn_1km
-
-# Compute spatial IQR Mn in a 2 km radius for each point
-iqr_Mn_1km <- sapply(1:nrow(points_sf_utm), function(i) {
-  distances <- st_distance(points_sf_utm[i, ], points_sf_utm)
-  nearby <- which(as.numeric(distances) <= 2000)  # within 2 km
-  IQR(points_sf_utm$Mn[nearby], na.rm = TRUE)
-})
-points_sf_utm$Mn_IQR_1km <- iqr_Mn_1km
-
-##Next, I want to create a grid-style plot (so a smoothed geo-spatial spread)
+# Create sample type category
+points_sf_utm$sample_type <- case_when(
+  points_sf_utm$river_sample_yn == 1 ~ "River",
+  points_sf_utm$school_sample_yn == 1 ~ "School",
+  points_sf_utm$hh_sample_yn == 1 ~ "Household",
+  points_sf_utm$vendor_sachet_yn == 1 ~ "Vendor",
+)
+points_sf_utm$sample_type <- factor(points_sf_utm$sample_type,
+                                     levels = c("Household", "School", "River", "Vendor"))
 
 # Create grid over the expanded bbox (10 km buffer)
-grid <- st_make_grid(points_sf_utm, cellsize = 2000, square = FALSE)  # 2km x 2km cells (to match the IQR&Median Resolution)
+grid <- st_make_grid(points_sf_utm, cellsize = 5000, square = FALSE)  # 1km x 2km cells (to match the IQR&Median Resolution)
 grid_sf <- st_sf(grid_id = 1:length(grid), geometry = grid)
 joined <- st_join(points_sf_utm, grid_sf)
 # Compute median Mn MEDIAN and IQR per grid cell
@@ -121,49 +127,88 @@ grid_summary$Mn_IQR_log <- log(grid_summary$Mn_IQR)
 ##------------------------
 ## MAKE THE MAP
 ##------------------------
-# Buffer around sample points (e.g. 50km box) for SSA inset
+# Create study area box (expand bbox by 50km instead of st_buffer to keep sharp corners)
 study_bbox <- st_bbox(points_sf_utm)
-study_box <- st_as_sfc(st_bbox(study_bbox), crs = st_crs(points_sf_utm))
-study_box_expanded <- st_buffer(study_box, dist = 50000)  # 50 km buffer
-study_box_wgs84 <- st_transform(study_box_expanded, crs = 4326)  # transform to match Africa map
+study_bbox_expanded <- study_bbox
+study_bbox_expanded["xmin"] <- study_bbox["xmin"] - 50000
+study_bbox_expanded["xmax"] <- study_bbox["xmax"] + 50000
+study_bbox_expanded["ymin"] <- study_bbox["ymin"] - 50000
+study_bbox_expanded["ymax"] <- study_bbox["ymax"] + 50000
+study_box_expanded <- st_as_sfc(study_bbox_expanded, crs = st_crs(points_sf_utm))
+study_box_wgs84 <- study_box_expanded %>%
+  st_segmentize(dfMaxLength = 1000) %>%  # densify edges to prevent curving after transform
+  st_transform(crs = 4326)  # transform to match Africa map
 
-ghana_in_ssa_map <- ggplot() +
-  geom_sf(data = africa_boundary, fill = "grey90", color = "grey70", size = 0.2) +
-  # geom_sf(data = ghana_boundary, fill = "lightcoral", color = "grey20", size = 0.3) +
-  geom_sf(data = study_box_wgs84, fill = NA, color = "red", size = 1) +  # Highlight study area
+
+# Expand the bounding box by 5 km (5,000 meters) in each direction
+bbox_pts <- st_bbox(points_sf_utm)
+bbox_expanded <- bbox_pts
+bbox_expanded["xmin"] <- bbox_pts["xmin"] - 5000 #<- Within 5km box *upper lower right left
+bbox_expanded["xmax"] <- bbox_pts["xmax"] + 5000
+bbox_expanded["ymin"] <- bbox_pts["ymin"] - 5000
+bbox_expanded["ymax"] <- bbox_pts["ymax"] + 5000
+
+
+# ghana_in_ssa_map <- ggplot() +
+#   geom_sf(data = africa_boundary, fill = "grey90", color = "grey70", size = 0.2) +
+#   # geom_sf(data = ghana_boundary, fill = "lightcoral", color = "grey20", size = 0.3) +
+#   geom_sf(data = study_box_wgs84, fill = NA, color = "red", size = 1) +  # Highlight study area
+#   labs(title = "") +
+#   theme_void() +
+#   theme(
+#     plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
+#   )
+
+study_area_WestAfrica <- ggplot() +
+  geom_sf(data = west_africa, fill = "grey90", color = "grey70", size = 0.2) +
+  geom_sf(data = ghana_boundary, fill = "grey80", color = "grey40", size = 0.3) +  # Show Ghana for context
+  geom_sf(data = study_box_wgs84, fill = NA, color = "red", linewidth = 1) +  # Study area box
   labs(title = "") +
   theme_void() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
   )
+print(study_area_WestAfrica)
 
 study_box_proj <- st_transform(study_box_expanded, crs = st_crs(rivers_utm))
 rivers_crop <- st_intersection(rivers_utm, study_box_proj)
 sample_map <- ggplot() +
   # Rivers
-  geom_sf(data = rivers_crop, aes(color = "Rivers"), size = 0.3, show.legend = "line") +
-  
-  # Sample points (just red dots)
-  geom_sf(data = points_sf_utm, aes(color = "Sample Points"), size = 0.6, alpha = 0.85, show.legend = "point") +
-  
+  geom_sf(data = rivers_crop, aes(color = "Rivers"), linewidth = 0.3, alpha = 0.4) +
+
   # District boundaries
-  geom_sf(data = all_dist, aes(color = "District Boundaries"), fill = NA, size = 0.4, show.legend = "line") +
-  
-  # Region boundary (shown but not in legend)
-  geom_sf(data = wboundary_utm, color = "grey50", fill = NA, size = 0.4) +
-  
-  labs(title = "Sample Points & Rivers in Western North",
-       color = "Features") +  # Unified legend title
-  
-  # Manual colors for all features under 'color' aesthetic
+  geom_sf(data = all_dist, aes(color = "District Boundaries"), fill = NA, linewidth = 0.55) +
+
+  # Sample points by type - map both shape and color
+  geom_sf(data = points_sf_utm, aes(shape = sample_type, color = sample_type),
+          size = 2, alpha = 0.7) +
+
+  # Region boundary
+  geom_sf(data = wboundary_utm, color = "black", fill = NA, linewidth = 0.55) +
+
+  # Shape scale for sample types (including Vendor)
+  scale_shape_manual(
+    name = "Sample Type",
+    values = c("Household" = 16, "School" = 17, "River" = 15, "Vendor" = 18),  # 18 = diamond
+     guide = "none"
+  ) +
+
+ # Combined color scale for everything
   scale_color_manual(
+    name = "Legend",
     values = c(
-      "Sample Points" = "red",
-      "Rivers" = "blue",
-      "District Boundaries" = "black"
+      "Household" = "red", "School" = "darkgreen", "River" = "blue", "Vendor" = "purple",
+      "Rivers" = "blue", "District Boundaries" = "black"
+    ),
+    guide = guide_legend(
+      override.aes = list(
+        linetype = c(0, 0, 0, 0, 1, 1),
+        shape = c(16, 17, 15, 18, NA, NA),
+        linewidth = c(NA, NA, NA, NA, 0.5, 0.75)
+      )
     )
   ) +
-  
+
   theme_minimal() +
   theme(
     panel.grid.major = element_blank(),
@@ -172,78 +217,101 @@ sample_map <- ggplot() +
     legend.position = "right",
     legend.title = element_text(size = 9, face = "bold"),
     legend.text = element_text(size = 8),
-    legend.key.height = unit(1.1, "lines"),  # Control spacing between legend rows
+    legend.key.height = unit(1.1, "lines"),
     legend.spacing.y = unit(0.6, "lines")
   ) +
-  
+
   coord_sf(
-    xlim = c(study_bbox["xmin"], study_bbox["xmax"]),
-    ylim = c(study_bbox["ymin"], study_bbox["ymax"]),
+    xlim = c(study_bbox["xmin"] - 10000, study_bbox["xmax"] + 10000),
+    ylim = c(study_bbox["ymin"] - 10000, study_bbox["ymax"] + 10000),
     expand = FALSE
   )
 
+print(sample_map)
 
-upper_panel <- ghana_in_ssa_map + sample_map +
-  plot_layout(widths = c(0.8, 1.6))  # Adjust these ratios as needed
+# inset_map <- ggplot() +
+#   geom_sf(data = districts, fill = "grey95", color = "grey60", size = 0.2) +
+#   geom_sf(data = all_dist, fill = "red", color = "black", size = 0.3) +
+#   ggtitle("Sampled Districts \n within Ghana") +
+#   theme_void() +
+#   theme(
+#     plot.title = element_text(hjust = 0.5, size = 8, face = "bold"),
+#     plot.margin = margin(0.0, 0.0, 0.0, 0.0)
+#   )
+
+# # Add white background and border to inset box
+# inset_with_box <- ggdraw() +
+#   draw_plot(
+#     ggplot() + theme_void() +
+#       theme(panel.background = element_rect(fill = "white", color = "black")),
+#     x = 0, y = 0, width = 0.9, height = 1.1
+#   ) +
+#   draw_plot(inset_map, x = 0.05, y = 0.05, width = 0.875, height = 1.075)
+
+
+# ghana_map_ssa <- ggplot() +
+#   geom_sf(data = africa_boundary, fill = "grey90", color = "grey60", size = 0.2) +  # SSA background
+#   geom_sf(data = ghana_boundary, fill = "red", color = "black", size = 0.45) +
+#   theme_void()     # Ghana in red
+  # geom_sf(data = rivers_utm, color = "blue", size = 0.2) +                          # Rivers
+# labs(title = expression(bold("A.") ~ "Sample Point Distribution within Ghana")) +  theme_void() +
+#   theme(
+#     plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
+#   )
+
+upper_panel <- study_area_WestAfrica + sample_map +
+  plot_layout(widths = c(1.5, 3)) +
+  plot_annotation(
+    title = expression(bold("A.") ~ "Study Area Overview and Sampling Locations in Western North Ghana")
+  )
+if (dev.cur() == 1) windows(width = 8, height = 4)  # Only opens if no device active
 print(upper_panel)
 
+# # Extract legend from sample_map
+# sample_map_legend <- cowplot::get_legend(sample_map)
 
-# Expand the bounding box by 10 km (10,000 meters) in each direction
-bbox_pts <- st_bbox(points_sf_utm)
-bbox_expanded <- bbox_pts
-bbox_expanded["xmin"] <- bbox_pts["xmin"] - 10000 #<- Within 10km box *upper lower right left
-bbox_expanded["xmax"] <- bbox_pts["xmax"] + 10000
-bbox_expanded["ymin"] <- bbox_pts["ymin"] - 10000
-bbox_expanded["ymax"] <- bbox_pts["ymax"] + 10000
+# # Remove legend from sample_map
+# sample_map_no_legend <- sample_map +
+#   theme(legend.position = "none",
+#         plot.margin = margin(0, -10, 0, 0))
+# study_area_WestAfrica_minimal <- study_area_WestAfrica +
+#   theme(plot.margin = margin(0, 0, 0, -10))
 
-inset_map <- ggplot() +
-  geom_sf(data = districts, fill = "grey95", color = "grey60", size = 0.2) +
-  geom_sf(data = all_dist, fill = "red", color = "black", size = 0.3) +
-  ggtitle("Sampled Districts \n within Ghana") +
-  theme_void() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 8, face = "bold"),
-    plot.margin = margin(0.0, 0.0, 0.0, 0.0)
-  )
+# # Layout: (West Africa / legend) | sample_map
+# upper_panel <- (study_area_WestAfrica / wrap_elements(sample_map_legend) +
+#                   plot_layout(heights = c(1, 3))) |
+#                sample_map_no_legend +
+#                plot_layout(widths = c(2.5, 1))
 
-# Add white background and border to inset box
-inset_with_box <- ggdraw() +
-  draw_plot(
-    ggplot() + theme_void() +
-      theme(panel.background = element_rect(fill = "white", color = "black")),
-    x = 0, y = 0, width = 0.9, height = 1.1
-  ) +
-  draw_plot(inset_map, x = 0.05, y = 0.05, width = 0.875, height = 1.075)
+# upper_panel <- upper_panel +
+#   plot_annotation(
+#     title = expression(bold("A.") ~ "Study Area Overview and Sampling Locations in Western North Ghana")
+#   )
+# upper_panel <- upper_panel & theme(plot.margin = margin(0, 0, 0, 0))
+
+# print(upper_panel)
 
 
-ghana_map_ssa <- ggplot() +
-  geom_sf(data = africa_boundary, fill = "grey90", color = "grey60", size = 0.2) +  # SSA background
-  geom_sf(data = ghana_boundary, fill = "red", color = "black", size = 0.3) +       # Ghana in red
-  # geom_sf(data = rivers_utm, color = "blue", size = 0.2) +                          # Rivers
-  labs(title = "Sample Point Distribution within Ghana") +
-  theme_void() +
-  theme(
-    plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
-  )
-
-
-
-
-# Plot the Mn concentration using ggplot2
+# Plot the Mn concentration using ggplot2 - Individual HH points colored by Mn level
 main_map <- ggplot() +
   geom_sf(data = wboundary_utm, fill = "grey90", color = "black", size = 0.6) +
   geom_sf(data = all_dist, fill = NA, color = "black", size = 0.6) +
-  geom_sf(data = grid_summary, aes(fill = Mn_median_log), color = "white", size = 0.1) + 
-  geom_sf(data = points_sf_utm, shape = 21, fill = "black", color = "white", size = 2, alpha = 0.85) +
-  # geom_sf(data = rivers_utm, color = "blue", size = 0.4) +
+  # Individual points colored by Mn concentration with transparency for overlap
+  geom_sf(data = points_sf_utm, aes(fill = Mn_LODsq2),
+          shape = 21, color = "white", size = 4, alpha = 0.57, stroke = 0.3) +
+  # Blue circle outline for river samples
+  geom_sf(data = points_sf_utm[points_sf_utm$sample_type == "River", ],
+          shape = 21, fill = NA, color = "blue", size = 4, stroke = 1,  alpha = 0.4) +
   scale_fill_distiller(
-    name = "log(Mn Median)\n(1km grid)",
+    name = expression("Mn(" * mu * "g/L)"),
     palette = "YlOrRd",
     direction = 1,
-    na.value = "transparent"
-  ) + 
+    trans = "log",
+    na.value = "grey50",
+    labels = scales::label_number(accuracy = 1)
+  ) +
   labs(
-    title = "A. Log(Mn Median)",
+    title = expression(bold("B.") ~ "Mn Levels at Sample Points (" * mu * "g/L)"),
     x = "Longitude", y = "Latitude"
   ) +
   theme_minimal() +
@@ -251,97 +319,113 @@ main_map <- ggplot() +
     legend.position = c(0.01, 0.05),         # x, y (0 = left/bottom, 1 = right/top)
     legend.justification = c(0, 0),         # anchor point for the legend box
     legend.background = element_rect(fill = "white", color = NA),
-    legend.box.background = element_rect(color = "black"), 
+    legend.box.background = element_rect(color = "black"),
     legend.text = element_text(size = 7),    # smaller legend labels
     legend.title = element_text(size = 8, face = "bold")  # optional: smaller bold title
   ) +
   coord_sf(
-    xlim = c(bbox_expanded["xmin"], bbox_expanded["xmax"]), #<- +/- 10km 
+    xlim = c(bbox_expanded["xmin"], bbox_expanded["xmax"]), #<- +/- 10km
     ylim = c(bbox_expanded["ymin"], bbox_expanded["ymax"]), #<- +/- 10km
     expand = FALSE
   )
-
-## Repeat for IQR 
-main_map_IQR <- ggplot() +
-  geom_sf(data = wboundary_utm, fill = "grey90", color = "black", size = 0.6) +
-  geom_sf(data = all_dist, fill = NA, color = "black", size = 0.6) +
-  geom_sf(data = grid_summary, aes(fill = Mn_IQR_log ), color = "white", size = 0.1) + 
-  geom_sf(data = points_sf_utm, shape = 21, fill = "black", color = "white", size = 2, alpha = 0.85) +
-  geom_sf(data = rivers_utm, color = "blue", size = 0.4) +
-  scale_fill_distiller(
-    name = "log(Mn IQR)\n(1km grid)",
-    palette = "YlOrRd",
-    direction = 1,
-    na.value = "transparent"
-  ) + 
-  labs(
-    title = "B. Log(Mn IQR)",
-    x = "Longitude", y = "Latitude"
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = c(0.01, 0.05),         # x, y (0 = left/bottom, 1 = right/top)
-    legend.justification = c(0, 0),         # anchor point for the legend box
-    legend.background = element_rect(fill = "white", color = NA),
-    legend.box.background = element_rect(color = "black"), 
-    legend.text = element_text(size = 7),    # smaller legend labels
-    legend.title = element_text(size = 8, face = "bold")  # optional: smaller bold title
-  ) +
-  coord_sf(
-    xlim = c(bbox_expanded["xmin"], bbox_expanded["xmax"]),
-    ylim = c(bbox_expanded["ymin"], bbox_expanded["ymax"]),
-    expand = FALSE
-  )
+print(main_map)
+# ## Repeat for IQR
+# main_map_IQR <- ggplot() +
+#   geom_sf(data = wboundary_utm, fill = "grey75", color = "black", size = 0.6) +
+#   geom_sf(data = all_dist, fill = NA, color = "black", size = 0.6) +
+#   geom_sf(data = grid_summary, aes(fill = Mn_IQR ), color = alpha("white", 0.3), size = 0.05) +
+#   # geom_sf(data = points_sf_utm, shape = 21, fill = "black", color = "white", size = 2, alpha = 0.85) +
+#   # geom_sf(data = rivers_utm, color = "blue", size = 0.4) +
+#   scale_fill_distiller(
+#     name = "Mn IQR\n(1km grid)",
+#     palette = "YlOrRd",
+#     direction = 1,
+#     na.value = "transparent"
+#   ) +
+#   labs(
+#     title = expression(bold("C.") ~ "Inter-Quartile Range"),
+#     x = "Longitude", y = "Latitude"
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     legend.position = c(0.01, 0.05),         # x, y (0 = left/bottom, 1 = right/top)
+#     legend.justification = c(0, 0),         # anchor point for the legend box
+#     legend.background = element_rect(fill = "white", color = NA),
+#     legend.box.background = element_rect(color = "black"),
+#     legend.text = element_text(size = 7),    # smaller legend labels
+#     legend.title = element_text(size = 8, face = "bold")  # optional: smaller bold title
+#   ) +
+#   coord_sf(
+#     xlim = c(bbox_expanded["xmin"], bbox_expanded["xmax"]),
+#     ylim = c(bbox_expanded["ymin"], bbox_expanded["ymax"]),
+#     expand = FALSE
+#   )
 
 
 # Final map with inset placed in lower-right
-## Median Plot
-final_plot <- ggdraw() +
-  draw_plot(main_map) 
-+
-  draw_plot(inset_with_box, x = 0.8, y = 0.1, width = 0.2, height = 0.2)
+# ## Median Plot
+# final_plot <- ggdraw() +
+#   draw_plot(main_map)
+# # +
+#   draw_plot(inset_with_box, x = 0.8, y = 0.1, width = 0.2, height = 0.2)
 
 # if (dev.cur() == 1) windows(width = 14, height = 8)  # Only opens if no device active
 # print(final_plot)
-# ggsave("../Output/Figures/Mn_MEDIAN_Distribution_Grid_Map.pdf", 
-#        plot = final_plot, 
+# ggsave("../Output/Figures/Mn_MEDIAN_Distribution_Grid_Map.pdf",
+#        plot = final_plot,
 #        width = 10, height = 8)
 
 
-## IQR Plot
-final_plot_IQR <- ggdraw() +
-  draw_plot(main_map_IQR) +
-  draw_plot(inset_with_box, x = 0.8, y = 0.1, width = 0.2, height = 0.2)
+# ## IQR Plot
+# final_plot_IQR <- ggdraw() +
+#   draw_plot(main_map_IQR)
+  # draw_plot(inset_with_box, x = 0.8, y = 0.1, width = 0.2, height = 0.2)
 
 # if (dev.cur() == 1) windows(width = 14, height = 8)  # Only opens if no device active
 # print(final_plot_IQR)
-# ggsave("../Output/Figures/Mn_IQR_Distribution_Grid_Map.pdf", 
-#        plot = final_plot, 
+# ggsave("../Output/Figures/Mn_IQR_Distribution_Grid_Map.pdf",
+#        plot = final_plot,
 #        width = 10, height = 8)
 
-## Put those two together: 
-main_map_with_inset <- ggdraw() +
-  draw_plot(main_map) 
+## Put those two together:
+# main_map_with_inset <- ggdraw() +
+#   draw_plot(main_map)
 
-main_map_IQR_with_inset <- ggdraw() +
-  draw_plot(main_map_IQR) +
-  draw_plot(inset_with_box, x = 0.81, y = 0.225, width = 0.2, height = 0.18)
+# main_map_IQR_with_inset <- ggdraw() +
+#   draw_plot(main_map_IQR)
+#   # draw_plot(inset_with_box, x = 0.81, y = 0.225, width = 0.2, height = 0.18)
+# print(main_map_IQR_with_inset)
 
-final_side_by_side <- plot_grid(
-  main_map_with_inset,
-  main_map_IQR_with_inset,
-  ncol = 2
-)
+# final_side_by_side <- plot_grid(
+#   main_map_with_inset + theme(plot.margin = margin(0, 0, 0, 0)),
+#   main_map_IQR_with_inset + theme(plot.margin = margin(0, 0, 0, 0)),
+#   ncol = 2
+# )
+# print(final_side_by_side)
+upper_panel_wrapped <- wrap_elements(full = upper_panel)
+upper_panel_wrapped <- upper_panel_wrapped & theme(plot.margin = margin(0, 0, 0, 0))
 
-if (dev.cur() == 1) windows(width = 14, height = 8)  # Only opens if no device active
-print(final_side_by_side)
-ggsave("../Output/Figures/Mn_IQR_and_Median_Grid_Map.pdf",
-       plot = final_side_by_side,
-       width = 14, height = 8)
+  # combined_plot <- (plot_spacer() + upper_panel_wrapped + plot_spacer() + plot_layout(widths = c(1, 6, 1))) /
+  #                  final_side_by_side +
+  #                  plot_layout(heights = c(0.75, 1))
 
-STOP HERE 
+design <- "
+AAAA
+BBB#
+"
+combined_plot <- upper_panel_wrapped + main_map +
+  plot_layout(design = design, heights = c(1, 1))
+
+ print(combined_plot)
+ggsave("../Output/Figures/Mn_IQR_and_Median_Grid_Map_Africa.svg",
+       plot = combined_plot,
+       width = 8, height = 8)
+
+
+
+STOP HERE
 ##------------------------
-## WHETHER DOWNSTREAM SAMPLE HAS HIGHER MN CONCENTRAITON 
+## WHETHER DOWNSTREAM SAMPLE HAS HIGHER MN CONCENTRAITON
 ##------------------------
 rivers_split <- rivers_local %>%
   st_cast("MULTILINESTRING", warn = FALSE) %>%
@@ -439,9 +523,9 @@ nonsachetpoints_sf_utm$nearest_node <- apply(point_coords, 1, function(coord) {
 nonsachetpoints_sf_utm$n_upstream <- sapply(1:nrow(nonsachetpoints_sf_utm), function(i) {
   this_node <- nonsachetpoints_sf_utm$nearest_node[i]
   others <- nonsachetpoints_sf_utm$nearest_node[-i]
-  
+
   reachable <- suppressWarnings(shortest_paths(g, from = others, to = this_node, output = "vpath"))
-  
+
   # Count how many of those can reach the current point
   sum(sapply(reachable$vpath, length) > 0)
 })
@@ -475,23 +559,22 @@ ggplot(nonsachetpoints_sf_utm, aes(x = downstream_status, y = Mn_LODsq2)) +
     title = "Relationship Between Downstream Status and Mn Levels"
   )
 
-  # 
+  #
   # # Shpefile with only the districts in the western region
-  # allwest <- districts[districts$REGION == "WESTERN NORTH" | 
+  # allwest <- districts[districts$REGION == "WESTERN NORTH" |
   #                        districts$REGION == "WESTERN" |
   #                        districts$REGION == "ASHANTI" |
   #                        districts$REGION == "AHAFO" |
   #                        districts$REGION == "CENTRAL" |
   #                        districts$REGION == "BONO" , ]
-  # 
-  # # 2 districts of interest 
+  #
+  # # 2 districts of interest
   # sw_dist <- districts[districts$DISTRICT == "SEFWI-WIAWSO" , ]
   # sba_dist <- districts[districts$DISTRICT == "BIBIANI-ANHWIASO-BEKWAI MUNICIPAL" , ]
   # sa_dist <- districts[districts$DISTRICT == "SEFWI AKONTOMBRA"  , ]
   # j_dist <- districts[districts$DISTRICT == "JUABOSO"  , ]
-  # 
+  #
   # # the 4 districts that harry sent ot anne
 
-  # 
+  #
   # aowin_dist <- districts[districts$DISTRICT == "AOWIN" , ]
-  

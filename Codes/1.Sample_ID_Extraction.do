@@ -1,6 +1,6 @@
 /* Water Sample */
 cd "$master_loc"
-
+ **TestTestTest
 
 **# Sample ID Extraction
 
@@ -174,8 +174,7 @@ replace village_id = substr(sample_ID, 1, 3) if missing(village_id)
 
 
 
-
-save "$master_loc/Processed Stata Dta/Sample_ID_Log.dta", replace
+save "../Processed Stata Dta/Sample_ID_Log.dta", replace
 
 
 
