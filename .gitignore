@@ -43,6 +43,27 @@ logs/
 ~*
 .~lock.*
 
+# Shapefiles and related
+*.shp
+*.shx
+*.dbf
+*.prj
+*.sbn
+*.sbx
+*.cpg
+*.qpj
+*.xml
+*.fbn
+*.fbx
+*.ain
+*.aih
+*.atx
+*.ixs
+*.mxs
+*.fix
+*.cst
+*.zip
+
 # Stata specific
 *.smcl
 *.gph
