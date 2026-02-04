@@ -24,9 +24,9 @@ cd "$master_loc"
 ls
 
 **# Sample ID Extraction
-**This do file extract the IPA-shared sample log data and generate the master sample ID files shared with Taylor for result entries
+**This do file extract the field-shared sample log data and generate the master sample ID files shared with Taylor for result entries
 cd "$master_loc"
-do 1.Sample_ID_Extraction.do
+/* do 1.Sample_ID_Extraction.do */
 
 
 **# Lab result processing
