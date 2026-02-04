@@ -30,7 +30,15 @@ invisible(lapply(packages, function(pkg) {
 
 
 ## Do NOT CHANGE -- R SCRIPT IS SAVED WITH THE SAME FOLDER AS THE MASTER DO FILE
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
+  setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+} else {
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- args[grep("--file=", args)]
+  if (length(file_arg) > 0) {
+    setwd(dirname(normalizePath(sub("--file=", "", file_arg))))
+  }
+}
 
 ##------------------------
 ## INPUT DATA
@@ -168,7 +176,7 @@ study_area_WestAfrica <- ggplot() +
   theme(
     plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
   )
-print(study_area_WestAfrica)
+# print(study_area_WestAfrica)
 
 study_box_proj <- st_transform(study_box_expanded, crs = st_crs(rivers_utm))
 rivers_crop <- st_intersection(rivers_utm, study_box_proj)
@@ -227,7 +235,7 @@ sample_map <- ggplot() +
     expand = FALSE
   )
 
-print(sample_map)
+# print(sample_map)
 
 # inset_map <- ggplot() +
 #   geom_sf(data = districts, fill = "grey95", color = "grey60", size = 0.2) +
@@ -264,8 +272,8 @@ upper_panel <- study_area_WestAfrica + sample_map +
   plot_annotation(
     title = expression(bold("A.") ~ "Study Area Overview and Sampling Locations in Western North Ghana")
   )
-if (dev.cur() == 1) windows(width = 8, height = 4)  # Only opens if no device active
-print(upper_panel)
+# if (interactive() && dev.cur() == 1) windows(width = 8, height = 4)
+# print(upper_panel)
 
 # # Extract legend from sample_map
 # sample_map_legend <- cowplot::get_legend(sample_map)
@@ -420,161 +428,3 @@ combined_plot <- upper_panel_wrapped + main_map +
 ggsave("../Output/Figures/Mn_IQR_and_Median_Grid_Map_Africa.svg",
        plot = combined_plot,
        width = 8, height = 8)
-
-
-
-STOP HERE
-##------------------------
-## WHETHER DOWNSTREAM SAMPLE HAS HIGHER MN CONCENTRAITON
-##------------------------
-rivers_split <- rivers_local %>%
-  st_cast("MULTILINESTRING", warn = FALSE) %>%
-  st_cast("LINESTRING", warn = FALSE)
-river_coords_list <- st_coordinates(rivers_split)
-river_coords_df <- as.data.frame(river_coords_list)
-river_coords_df$node <- paste(river_coords_df$X, river_coords_df$Y, sep = ",")
-river_coords_df$group <- river_coords_df$L1
-
-rivers_net <- as_sfnetwork(rivers_split, directed = TRUE)
-
-# Get node coordinates
-node_coords <- st_coordinates(activate(rivers_net, "nodes"))
-
-# Match samples to nearest river node
-point_coords <- st_coordinates(nonsachetpoints_sf_utm)
-nn_indices <- get.knnx(node_coords[, 1:2], point_coords, k = 1)$nn.index
-nonsachetpoints_sf_utm$nearest_node_id <- nn_indices
-
-# Create igraph from sfnetwork
-g <- as.igraph(rivers_net)
-
-# Count how many sample nodes can reach each node
-nonsachetpoints_sf_utm$n_upstream <- sapply(1:nrow(nonsachetpoints_sf_utm), function(i) {
-  this_node <- nonsachetpoints_sf_utm$nearest_node_id[i]
-  others <- nonsachetpoints_sf_utm$nearest_node_id[-i]
-  paths <- suppressWarnings(shortest_paths(g, from = others, to = this_node, output = "vpath"))
-  sum(sapply(paths$vpath, length) > 0)
-})
-
-ggplot(nonsachetpoints_sf_utm, aes(x = n_upstream, y = Mn_LODsq2)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(
-    x = "Number of Upstream Sample Points",
-    y = "Local Mn Concentration",
-    title = "Does Upstream Activity Influence Mn Levels?"
-  )
-
-
-
-
-# Build edges by walking along each linestring
-edges <- river_coords_df %>%
-  group_by(group) %>%
-  mutate(
-    point_order = row_number(),
-    from = lag(node),
-    to = node
-  ) %>%
-  filter(!is.na(from)) %>%
-  select(from, to)
-
-plot(rivers_split, col = "blue")
-plot(st_geometry(nonsachetpoints_sf_utm), col = "black", add = TRUE)
-rivers_net <- as_sfnetwork(rivers_local, directed = TRUE)
-
-# Simplify and clean (optional but recommended)
-rivers_net <- st_transform(rivers_net, 32630) %>%
-  convert(to_spatial_subdivision) %>%
-  convert(to_undirected)
-
-# Use node coordinates from the network
-node_coords <- st_coordinates(activate(rivers_net, "nodes"))
-node_points <- st_as_sf(node_coords, coords = c("X", "Y"), crs = st_crs(points_sf_utm))
-plot(st_geometry(node_points), col = "red", pch = 16, add = TRUE)
-
-# Ensure point_coords is numeric matrix (already should be from st_coordinates)
-point_matrix <- as.matrix(point_coords)
-
-# Then use get.knnx
-nn_indices <- get.knnx(node_matrix, point_matrix, k = 1)$nn.index
-nonsachetpoints_sf_utm$nearest_node <- st_nearest_feature(nonsachetpoints_sf_utm, activate(rivers_net, "nodes"))
-
-# Convert edges to igraph object
-g <- igraph::graph_from_data_frame(edges, directed = TRUE)
-
-point_coords <- st_coordinates(nonsachetpoints_sf_utm)
-river_nodes <- unique(c(edges$from, edges$to))
-node_coords <- do.call(rbind, strsplit(river_nodes, ","))
-node_coords <- as.data.frame(node_coords)
-colnames(node_coords) <- c("X", "Y")
-node_coords$node <- river_nodes
-
-# Function to find nearest river node
-find_nearest_node <- function(x, y) {
-  dists <- (as.numeric(node_coords$X) - x)^2 + (as.numeric(node_coords$Y) - y)^2
-  node_coords$node[which.min(dists)]
-}
-
-nonsachetpoints_sf_utm$nearest_node <- apply(point_coords, 1, function(coord) {
-  find_nearest_node(coord[1], coord[2])
-})
-
-nonsachetpoints_sf_utm$n_upstream <- sapply(1:nrow(nonsachetpoints_sf_utm), function(i) {
-  this_node <- nonsachetpoints_sf_utm$nearest_node[i]
-  others <- nonsachetpoints_sf_utm$nearest_node[-i]
-
-  reachable <- suppressWarnings(shortest_paths(g, from = others, to = this_node, output = "vpath"))
-
-  # Count how many of those can reach the current point
-  sum(sapply(reachable$vpath, length) > 0)
-})
-
-ggplot(nonsachetpoints_sf_utm, aes(x = n_upstream, y = Mn_LODsq2)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(
-    x = "Number of Upstream Sample Points",
-    y = "Local Mn Concentration",
-    title = "Does Upstream Activity Influence Mn Levels?"
-  )
-
-p <- ggplot(nonsachetpoints_sf_utm, aes(x = n_upstream, y = Mn_LODsq2)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(
-    x = "Number of Upstream Sample Points",
-    y = "Local Mn Concentration",
-    title = "Does Upstream Activity Influence Mn Levels?"
-  )
-
-print(p)  # This ensures the plot is shown in script execution
-
-ggplot(nonsachetpoints_sf_utm, aes(x = downstream_status, y = Mn_LODsq2)) +
-  geom_point() +
-  geom_smooth(method = "lm") +
-  labs(
-    x = "Is Downstream (1 = Yes)",
-    y = "Local Mn Concentration",
-    title = "Relationship Between Downstream Status and Mn Levels"
-  )
-
-  #
-  # # Shpefile with only the districts in the western region
-  # allwest <- districts[districts$REGION == "WESTERN NORTH" |
-  #                        districts$REGION == "WESTERN" |
-  #                        districts$REGION == "ASHANTI" |
-  #                        districts$REGION == "AHAFO" |
-  #                        districts$REGION == "CENTRAL" |
-  #                        districts$REGION == "BONO" , ]
-  #
-  # # 2 districts of interest
-  # sw_dist <- districts[districts$DISTRICT == "SEFWI-WIAWSO" , ]
-  # sba_dist <- districts[districts$DISTRICT == "BIBIANI-ANHWIASO-BEKWAI MUNICIPAL" , ]
-  # sa_dist <- districts[districts$DISTRICT == "SEFWI AKONTOMBRA"  , ]
-  # j_dist <- districts[districts$DISTRICT == "JUABOSO"  , ]
-  #
-  # # the 4 districts that harry sent ot anne
-
-  #
-  # aowin_dist <- districts[districts$DISTRICT == "AOWIN" , ]

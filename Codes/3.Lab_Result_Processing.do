@@ -245,7 +245,7 @@ esttab all borehole river pipe well sachet using "..\Output\Tables\Heavy_Metals_
 
 
 save "..\Processed Stata dta\Lab Test Results.dta", replace
-export delimited using "../Output/Feed_into_GEE_Test_Results_with_GPS.csv", nolab replace
+export delimited GPS_lat GPS_long Mn Batch river_sample_yn school_sample_yn hh_sample_yn vendor_sachet_yn using "../Output/Feed_into_GEE_Test_Results_with_GPS.csv", nolab replace
 
 
 	**Appendix Table: Mn statistics by Sample Source
@@ -401,7 +401,7 @@ restore
 keep if hh_sample_yn == 1
 
 rename HH_full_ID caregiver_id_EL
-merge 1:m caregiver_id_EL using "C:\Users\liu.7133\Dropbox\Foundation First Evaluation\05_Data_Analysis\1. Pilot\Processed Data\Endline\Parent_Survey_isid_ChildCode.dta", gen(merge_caregiver)
+merge 1:m caregiver_id_EL using "..\Original Data\Parent_Survey_isid_ChildCode.dta", gen(merge_caregiver)
 drop if lost_in_EL!=0
 merge m:1 new_village_id using `river_test', gen(merge_river)
 distinct new_village_id if merge_river==1
@@ -439,13 +439,13 @@ foreach s in all_30_48m motor_30_48m language_30_48m socio_30_48m cognitive_30_4
 **among them 100110081P2 report to have sachet water as their primary drinking water
 **100151011P2 , and 110025106P1 report to drink borehole water
 
-replace sample_water_source = 6 if missing(sample_water_source) & caregiver_id_EL!="100151011P2" & caregiver_id_EL != "110025106P1" & caregiver_id_EL!="100110081P2"
+replace sample_water_source = 7 if missing(sample_water_source) & caregiver_id_EL!="100151011P2" & caregiver_id_EL != "110025106P1" & caregiver_id_EL!="100110081P2"
 
 local metals Pb Hg Zn Cd Mn Fe Cr Al Cu
 foreach var of varlist `metals' {
-	replace `var' = sachet_`var'_mean if missing(`var') &  sample_water_source == 6 //<-- replace village mean sachet concentration for those sachet households
+	replace `var' = sachet_`var'_mean if missing(`var') &  sample_water_source == 7 //<-- replace village mean sachet concentration for those sachet households
 }
-replace Batch = Batch_Sachet if missing(Batch) &  sample_water_source == 6
+replace Batch = Batch_Sachet if missing(Batch) &  sample_water_source == 7
 
 foreach var of varlist `metals' {
 	replace `var' = sachet_`var'_mean if missing(`var') & caregiver_id_EL=="100110081P2"

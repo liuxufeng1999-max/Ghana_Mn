@@ -35,7 +35,14 @@ do 1.Sample_ID_Extraction.do
 cd "$master_loc"
 do 3.Lab_Result_Processing.do
 
+**# Sample Map
+cd "$master_loc"
+shell "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" "Sample_Map.R"
 
+
+**#Sachet Water
+/* do 3A1.Sachet_Water_Processing.do  *<-- Sachet Water Sample ID and results processing */
+do 3A2.Sachet_Specifics.do
 
 **# Evaluation
 **Some pre-processings and descriptive statistics
