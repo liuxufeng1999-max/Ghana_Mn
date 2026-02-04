@@ -126,9 +126,9 @@ twoway ///
 	(kdensity z_irt_all_30_48m if Mn_above_LOD == 1 ), ///
 	legend(pos(6) col(2) order(1 "Mn below LOD" 2 "Mn detected")) ///
 	xtitle("Standardized Child Development Score") ytitle("") name(z_irt_Mn, replace)
-graph export "..\Output\Figures\kdensity_GSED_z_Score_and_Mn_Limits.pdf", ///
+graph export "..\Output\Figures\FigS1_kdensity_GSED_z_Score_and_Mn_Limits.pdf", ///
 	name(z_irt_Mn) as(pdf) replace
-graph export "..\Output\Figures\kdensity_GSED_z_Score_and_Mn_Limits.svg", ///
+graph export "..\Output\Figures\FigS1_kdensity_GSED_z_Score_and_Mn_Limits.svg", ///
 	name(z_irt_Mn) as(svg) replace
 
 
@@ -140,12 +140,12 @@ iebaltab `chld_cov', ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savecsv("..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_ChildCov.csv") replace
+                          savecsv("..\Output\Tables\Balance_Table\TableS1_iebaltab_Mn_above_LOD_ChildCov.csv") replace
 
 * Replace (SD) with [SD] to prevent Excel from interpreting (numbers) as negative
 tempname fh fw
-local csvfile "..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_ChildCov.csv"
-local csvtemp "..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_ChildCov_temp.csv"
+local csvfile "..\Output\Tables\Balance_Table\TableS1_iebaltab_Mn_above_LOD_ChildCov.csv"
+local csvtemp "..\Output\Tables\Balance_Table\TableS1_iebaltab_Mn_above_LOD_ChildCov_temp.csv"
 file open `fh' using "`csvfile'", read text
 file open `fw' using "`csvtemp'", write text
 file read `fh' line
@@ -173,14 +173,14 @@ iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savecsv("..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
+                          savecsv("..\Output\Tables\Balance_Table\TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
 // iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
 //  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
 //                          vce(cluster caregiver_id_BL_num) ///
 //                           fix(dist_code) ///
 //                           savecsv("$master_loc\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
-local csvfile "..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv"
-local csvtemp "..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_Caregiver_Household_Covar_temp.csv"
+local csvfile "..\Output\Tables\Balance_Table\TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv"
+local csvtemp "..\Output\Tables\Balance_Table\TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar_temp.csv"
 file open `fh' using "`csvfile'", read text
 file open `fw' using "`csvtemp'", write text
 file read `fh' line
@@ -225,9 +225,9 @@ iebaltab `water_practices'  if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest  ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-						  savecsv("..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv") replace
-local csvfile "..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv"
-local csvtemp "..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method_temp.csv"
+						  savecsv("..\Output\Tables\Balance_Table\TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv") replace
+local csvfile "..\Output\Tables\Balance_Table\TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv"
+local csvtemp "..\Output\Tables\Balance_Table\TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method_temp.csv"
 file open `fh' using "`csvfile'", read text
 file open `fw' using "`csvtemp'", write text
 file read `fh' line

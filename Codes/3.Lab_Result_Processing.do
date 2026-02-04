@@ -1,15 +1,6 @@
 /* Merge The Lab Results with the Main Dataset */
 
 cd "$master_loc"
-
-use "D:\Foundation First Pilot\02_Follow-up Survey\01_Parent Survey\04_clean_data_pii\FF_PARENT_EL_SURVEY_clean_pii_data.dta", clear
-keep village new_village_id
-duplicates drop
-rename new_village_id village_id_BL
-rename village village_name
-tempfile village_name_id
-save `village_name_id', replace
-
 import excel "..\Original Data\100925_MetalsData_GhanaWaterSampling_xfl - 10102025..xlsx", sheet("To_be_Merged_Stata") firstrow clear
 
 **Treat the below the detection limit as 0
@@ -27,11 +18,10 @@ replace sample_ID = "083_01_01" if sample_ID == "038_01_01"
 drop if sample_ID == "ACID DUPLICATE"
 
 
-merge 1:1 sample_ID using "../Processed Stata Dta/Sample_ID_Log.dta"
+merge 1:1 sample_ID using "../Original Data/Sample_ID_Log.dta"
 assert _merge==3 //-->all matched
 drop _merge
 egen sachet_yn = rowmax( vendor_sachet_yn school_sachet_yn)
-merge m:1 village_name using `village_name_id'
 
 
 **# WHO Threshold
@@ -180,9 +170,9 @@ graph hbox Mn if river_duplicates_yn==0 & Mn<650, ///
 	marker(1, mfcolor(gs10) mlcolor(gs10) ) ///
 	name(Mn_hbox, replace)
 
-graph export "..\Output\Figures\IQR_Mn_by_Sources.pdf", ///
+graph export "..\Output\Figures\Fig2_IQR_Mn_by_Sources.pdf", ///
 	name(Mn_hbox) as(pdf) replace
-graph export "..\Output\Figures\IQR_Mn_by_Sources.svg", ///
+graph export "..\Output\Figures\Fig2_IQR_Mn_by_Sources.svg", ///
 	name(Mn_hbox) as(svg) replace
 
 
@@ -207,14 +197,14 @@ local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_
 	qui eststo pipe: estpost sum `limit' if sample_water_source_brief == 3
 	qui eststo well: estpost sum `limit' if sample_water_source_brief==4
 	qui eststo sachet: estpost sum `limit' if sample_water_source_brief==5
-esttab all borehole river pipe well sachet using "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source.csv", label ///
+esttab all borehole river pipe well sachet using "..\Output\Tables\Table1_Heavy_Metals_by_Sample_Water_Source.csv", label ///
 	star(* 0.10 ** 0.05 *** 0.01)	///
 	replace main(mean %6.2f) aux(sd) mtitle("Total" "Borehole" "River" "Piped Water" "Well" "Sachet") nonote
 
 	* Post-process CSV: replace "0.00" with "Below LOD" only for metal rows
 	tempname fh3 fw3
-	local csvfile "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source.csv"
-	local csvtemp "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source_temp.csv"
+	local csvfile "..\Output\Tables\Table1_Heavy_Metals_by_Sample_Water_Source.csv"
+	local csvtemp "..\Output\Tables\Table1_Heavy_Metals_by_Sample_Water_Source_temp.csv"
 	file open `fh3' using "`csvfile'", read text
 	file open `fw3' using "`csvtemp'", write text
 	local prev_metal = 0
@@ -491,10 +481,12 @@ local WHO_metals Pb Hg Cd Mn Cr Cu
 local WHO_threshold 10 6 3 80 50 2000
 local i = 1
 foreach var of varlist `WHO_metals' {
+	capture drop WHO_`var'_higher
 	local threshold: word `i' of `WHO_threshold'
 	gen WHO_`var'_higher = `var' > `threshold'
 	local i = `i' + 1
 }
+capture drop WHO_Any_higher
 egen WHO_Any_higher = rowmax(WHO_Pb_higher WHO_Hg_higher WHO_Cd_higher WHO_Mn_higher WHO_Cr_higher WHO_Cu_higher)
 
 
@@ -504,6 +496,7 @@ local EPA_prim_metals Pb Hg Cd Cr Cu
 local EPA_prim_threshold 10 2 5 100 1300
 local i = 1
 foreach var of varlist `EPA_prim_metals' {
+	capture drop EPA_prim_`var'_higher
 	local threshold: word `i' of `EPA_prim_threshold'
 	gen EPA_prim_`var'_higher = `var' > `threshold'
 	local i = `i' + 1
@@ -513,11 +506,12 @@ local EPA_sec_metals Zn Mn Fe Al Cu
 local EPA_sec_threshold 5000 50 300 200 1000
 local i = 1
  foreach var of varlist `EPA_sec_metals' {
+	capture drop EPA_sec_`var'_higher
 	local threshold: word `i' of `EPA_sec_threshold'
 	gen EPA_sec_`var'_higher = `var' > `threshold'
 	local i = `i' + 1
 }
-
+capture drop EPA_PrimSec_Pb_higher EPA_PrimSec_Hg_higher EPA_Prim_Any_higher EPA_Sec_Any_higher EPA_PrimSec_higher WHO_EPA_Any_higher
 gen EPA_PrimSec_Pb_higher = EPA_prim_Pb_higher
 gen EPA_PrimSec_Hg_higher = EPA_prim_Hg_higher
 
@@ -541,6 +535,7 @@ foreach metal in `metals' {
     }
     // If any relevant variables were found, generate the rowmax
     if "`relevant_vars'" != "" {
+		capture drop any_limit_`metal'_higher
         egen any_limit_`metal'_higher = rowmax(`relevant_vars')
     }
 }

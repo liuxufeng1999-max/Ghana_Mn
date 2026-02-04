@@ -98,4 +98,4 @@ gen str20 lodlab = ""
 replace lodlab = "<LOD" if Mn==0
 
 drop sachet_brand_name sachet_manuf_name
-save "../Processed Stata Dta\Sachet Test Results_Only.dta", replace
+save "../Original Data\Sachet Test Results_Only.dta", replace

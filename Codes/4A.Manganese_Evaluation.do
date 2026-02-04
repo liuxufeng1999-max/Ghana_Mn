@@ -40,7 +40,7 @@ foreach var of varlist `outcome' {
 	local i = `i' + 1
 }
 
-esttab `model' using "..\Output\Tables\EPA_LOD_Mn_Exposure_ChildDev.rtf",  ///
+esttab `model' using "..\Output\Tables\Table3_EPA_LOD_Mn_Exposure_ChildDev.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 		mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
@@ -83,7 +83,7 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_Mn_addcov
 	local i = `i' + 1
 }
-esttab `model' using "..\Output\Tables\Continuous_Mn_Exposure_ChildDev.rtf",  ///
+esttab `model' using "..\Output\Tables\Table2_Continuous_Mn_Exposure_ChildDev.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 	mtitle("Child Development Score" "Child Development Score" "Child Development Score") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2) ///
@@ -145,7 +145,7 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_z_Mn_school_addcov
 	local i = `i' + 1
 }
-esttab `model'  using "..\Output\Tables\Mn_plus_SchoolExposure_ChildDev.rtf",  ///
+esttab `model'  using "..\Output\Tables\TableS4_Mn_plus_SchoolExposure_ChildDev.rtf",  ///
     stats(Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 			mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2 *log_school_Mn_max_LODsq2 ) ///
@@ -172,10 +172,10 @@ marginsplot, ///
 	title("") ///
 	name(SchoolMn, replace)
 
-graph export "..\Output\Figures\MarginsPlot_AME_by_SchoolMn.pdf", ///
+graph export "..\Output\Figures\Fig4_MarginsPlot_AME_by_SchoolMn.pdf", ///
 	name(SchoolMn) as(pdf) replace
 
-graph export "..\Output\Figures\MarginsPlot_AME_by_SchoolMn.svg", ///
+graph export "..\Output\Figures\Fig4_MarginsPlot_AME_by_SchoolMn.svg", ///
 	name(SchoolMn) as(svg) replace
 **# Heterogeneity: Male vs. Female
 
@@ -212,7 +212,7 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_z_Mn_Male_addcov
 	local i = `i' + 1
 }
-esttab `model' using "..\Output\Tables\Mn_ChildDev_by_BoysGirls.rtf",  ///
+esttab `model' using "..\Output\Tables\TableS5_Mn_ChildDev_by_BoysGirls.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 			mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(*.child_male_BL *log_Mn_LODsq2) ///
@@ -246,7 +246,6 @@ marginsplot, ///
 
 
 **# Robustness Checks: Cinelli and Hazlett (2020) Bound
-capture frame create sensemakr
 capture tab Mn_LOD_EPA, gen(Mn_LOD_EPA)
 
 **Categorical Mn: LOD EPA
@@ -261,7 +260,7 @@ sensemakr ///
 	z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add', ///
 	treat(Mn_LOD_EPA3) alpha(0.1) ///
 	gbenchmark(hh_learn_mca1 par_involv_mca1 recall_income_geq20k recall_income_geq10k recall_income_geq5k) gname(Covariates) extremeplot elim(0 0.2) contourplot kd(0.5 1 2) clines(5) ///
-	latex(Sensemakr_EPALODMn_Results) r2yz(1 0.75 0.5 0.25)
+	 r2yz(1 0.75 0.5 0.25)
 graph copy s_extremeplot Mn_EPA_extreme, replace
 // graph copy s_countourplot Mn_EPA_countour, replace
 
@@ -288,11 +287,11 @@ sensemakr ///
 	z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add', ///
 	treat(log_Mn_LODsq2) alpha(0.1) ///
 	gbenchmark(hh_learn_mca1 par_involv_mca1 recall_income_geq20k recall_income_geq10k recall_income_geq5k) gname(Covariates) extremeplot elim(0 0.2)  contourplot kd(0.5 1 2) clines(5) ///
-	latex(Sensemakr_logMn_Results) r2yz(1 0.75 0.5 0.25)
+	 r2yz(1 0.75 0.5 0.25)
 graph copy s_extremeplot logMn_extreme, replace
 grc1leg Mn_EPA_extreme	logMn_extreme, name(sensemakr_EPA_Log_Extreme, replace) xcommon
 graph export ///
-	"..\Output\Figures\Sensemakr_ExtremePlot_logEPA_Combined.svg", ///
+	"..\Output\Figures\FigS2_Sensemakr_ExtremePlot_logEPA_Combined.svg", ///
 	as(svg) name(sensemakr_EPA_Log_Extreme) replace
 // graph copy s_countourplot Mn_log_countour, replace
 
@@ -310,7 +309,7 @@ cd "$master_loc"
 
 * Export combined sensemakr table as RTF
 tempname rtf
-local rtffile "..\Output\Tables\Sensemakr_Combined_Results.rtf"
+local rtffile "..\Output\Tables\Table4_Sensemakr_Combined_Results.rtf"
 file open `rtf' using "`rtffile'", write replace
 file write `rtf' "{\rtf1\ansi" _n
 file write `rtf' "{\fonttbl{\f0 Times New Roman;}}" _n
@@ -477,10 +476,10 @@ graph combine ///
 
 cd "$master_loc"
 graph export ///
-	"..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.pdf", ///
+	"..\Output\Figures\Fig5_RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.pdf", ///
 	as(pdf) name(coefplot_rHHnonMn) replace
 graph export ///
-	"..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.svg", ///
+	"..\Output\Figures\Fig5_RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.svg", ///
 	as(svg) name(coefplot_rHHnonMn) replace
 
 **remove HH and School contaminated metal
@@ -600,10 +599,10 @@ graph combine ///
 	row(1) name(coefplot_rHHSchnonMn, replace)
 
 cd "$master_loc"
-graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.pdf", ///
+graph export "..\Output\Figures\FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.pdf", ///
 	as(pdf) name(coefplot_rHHSchnonMn) replace
 
-graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.svg", ///
+graph export "..\Output\Figures\FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.svg", ///
 	as(svg) name(coefplot_rHHSchnonMn) replace
 
 save "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", replace

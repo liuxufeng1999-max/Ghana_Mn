@@ -157,16 +157,6 @@ bbox_expanded["ymin"] <- bbox_pts["ymin"] - 5000
 bbox_expanded["ymax"] <- bbox_pts["ymax"] + 5000
 
 
-# ghana_in_ssa_map <- ggplot() +
-#   geom_sf(data = africa_boundary, fill = "grey90", color = "grey70", size = 0.2) +
-#   # geom_sf(data = ghana_boundary, fill = "lightcoral", color = "grey20", size = 0.3) +
-#   geom_sf(data = study_box_wgs84, fill = NA, color = "red", size = 1) +  # Highlight study area
-#   labs(title = "") +
-#   theme_void() +
-#   theme(
-#     plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
-#   )
-
 study_area_WestAfrica <- ggplot() +
   geom_sf(data = west_africa, fill = "grey90", color = "grey70", size = 0.2) +
   geom_sf(data = ghana_boundary, fill = "grey80", color = "grey40", size = 0.3) +  # Show Ghana for context
@@ -237,67 +227,13 @@ sample_map <- ggplot() +
 
 # print(sample_map)
 
-# inset_map <- ggplot() +
-#   geom_sf(data = districts, fill = "grey95", color = "grey60", size = 0.2) +
-#   geom_sf(data = all_dist, fill = "red", color = "black", size = 0.3) +
-#   ggtitle("Sampled Districts \n within Ghana") +
-#   theme_void() +
-#   theme(
-#     plot.title = element_text(hjust = 0.5, size = 8, face = "bold"),
-#     plot.margin = margin(0.0, 0.0, 0.0, 0.0)
-#   )
-
-# # Add white background and border to inset box
-# inset_with_box <- ggdraw() +
-#   draw_plot(
-#     ggplot() + theme_void() +
-#       theme(panel.background = element_rect(fill = "white", color = "black")),
-#     x = 0, y = 0, width = 0.9, height = 1.1
-#   ) +
-#   draw_plot(inset_map, x = 0.05, y = 0.05, width = 0.875, height = 1.075)
-
-
-# ghana_map_ssa <- ggplot() +
-#   geom_sf(data = africa_boundary, fill = "grey90", color = "grey60", size = 0.2) +  # SSA background
-#   geom_sf(data = ghana_boundary, fill = "red", color = "black", size = 0.45) +
-#   theme_void()     # Ghana in red
-  # geom_sf(data = rivers_utm, color = "blue", size = 0.2) +                          # Rivers
-# labs(title = expression(bold("A.") ~ "Sample Point Distribution within Ghana")) +  theme_void() +
-#   theme(
-#     plot.title = element_text(hjust = 0.5, size = 10, face = "bold")
-#   )
 
 upper_panel <- study_area_WestAfrica + sample_map +
   plot_layout(widths = c(1.5, 3)) +
   plot_annotation(
     title = expression(bold("A.") ~ "Study Area Overview and Sampling Locations in Western North Ghana")
   )
-# if (interactive() && dev.cur() == 1) windows(width = 8, height = 4)
-# print(upper_panel)
 
-# # Extract legend from sample_map
-# sample_map_legend <- cowplot::get_legend(sample_map)
-
-# # Remove legend from sample_map
-# sample_map_no_legend <- sample_map +
-#   theme(legend.position = "none",
-#         plot.margin = margin(0, -10, 0, 0))
-# study_area_WestAfrica_minimal <- study_area_WestAfrica +
-#   theme(plot.margin = margin(0, 0, 0, -10))
-
-# # Layout: (West Africa / legend) | sample_map
-# upper_panel <- (study_area_WestAfrica / wrap_elements(sample_map_legend) +
-#                   plot_layout(heights = c(1, 3))) |
-#                sample_map_no_legend +
-#                plot_layout(widths = c(2.5, 1))
-
-# upper_panel <- upper_panel +
-#   plot_annotation(
-#     title = expression(bold("A.") ~ "Study Area Overview and Sampling Locations in Western North Ghana")
-#   )
-# upper_panel <- upper_panel & theme(plot.margin = margin(0, 0, 0, 0))
-
-# print(upper_panel)
 
 
 # Plot the Mn concentration using ggplot2 - Individual HH points colored by Mn level
@@ -336,86 +272,10 @@ main_map <- ggplot() +
     ylim = c(bbox_expanded["ymin"], bbox_expanded["ymax"]), #<- +/- 10km
     expand = FALSE
   )
-print(main_map)
-# ## Repeat for IQR
-# main_map_IQR <- ggplot() +
-#   geom_sf(data = wboundary_utm, fill = "grey75", color = "black", size = 0.6) +
-#   geom_sf(data = all_dist, fill = NA, color = "black", size = 0.6) +
-#   geom_sf(data = grid_summary, aes(fill = Mn_IQR ), color = alpha("white", 0.3), size = 0.05) +
-#   # geom_sf(data = points_sf_utm, shape = 21, fill = "black", color = "white", size = 2, alpha = 0.85) +
-#   # geom_sf(data = rivers_utm, color = "blue", size = 0.4) +
-#   scale_fill_distiller(
-#     name = "Mn IQR\n(1km grid)",
-#     palette = "YlOrRd",
-#     direction = 1,
-#     na.value = "transparent"
-#   ) +
-#   labs(
-#     title = expression(bold("C.") ~ "Inter-Quartile Range"),
-#     x = "Longitude", y = "Latitude"
-#   ) +
-#   theme_minimal() +
-#   theme(
-#     legend.position = c(0.01, 0.05),         # x, y (0 = left/bottom, 1 = right/top)
-#     legend.justification = c(0, 0),         # anchor point for the legend box
-#     legend.background = element_rect(fill = "white", color = NA),
-#     legend.box.background = element_rect(color = "black"),
-#     legend.text = element_text(size = 7),    # smaller legend labels
-#     legend.title = element_text(size = 8, face = "bold")  # optional: smaller bold title
-#   ) +
-#   coord_sf(
-#     xlim = c(bbox_expanded["xmin"], bbox_expanded["xmax"]),
-#     ylim = c(bbox_expanded["ymin"], bbox_expanded["ymax"]),
-#     expand = FALSE
-#   )
+# print(main_map)
 
-
-# Final map with inset placed in lower-right
-# ## Median Plot
-# final_plot <- ggdraw() +
-#   draw_plot(main_map)
-# # +
-#   draw_plot(inset_with_box, x = 0.8, y = 0.1, width = 0.2, height = 0.2)
-
-# if (dev.cur() == 1) windows(width = 14, height = 8)  # Only opens if no device active
-# print(final_plot)
-# ggsave("../Output/Figures/Mn_MEDIAN_Distribution_Grid_Map.pdf",
-#        plot = final_plot,
-#        width = 10, height = 8)
-
-
-# ## IQR Plot
-# final_plot_IQR <- ggdraw() +
-#   draw_plot(main_map_IQR)
-  # draw_plot(inset_with_box, x = 0.8, y = 0.1, width = 0.2, height = 0.2)
-
-# if (dev.cur() == 1) windows(width = 14, height = 8)  # Only opens if no device active
-# print(final_plot_IQR)
-# ggsave("../Output/Figures/Mn_IQR_Distribution_Grid_Map.pdf",
-#        plot = final_plot,
-#        width = 10, height = 8)
-
-## Put those two together:
-# main_map_with_inset <- ggdraw() +
-#   draw_plot(main_map)
-
-# main_map_IQR_with_inset <- ggdraw() +
-#   draw_plot(main_map_IQR)
-#   # draw_plot(inset_with_box, x = 0.81, y = 0.225, width = 0.2, height = 0.18)
-# print(main_map_IQR_with_inset)
-
-# final_side_by_side <- plot_grid(
-#   main_map_with_inset + theme(plot.margin = margin(0, 0, 0, 0)),
-#   main_map_IQR_with_inset + theme(plot.margin = margin(0, 0, 0, 0)),
-#   ncol = 2
-# )
-# print(final_side_by_side)
 upper_panel_wrapped <- wrap_elements(full = upper_panel)
 upper_panel_wrapped <- upper_panel_wrapped & theme(plot.margin = margin(0, 0, 0, 0))
-
-  # combined_plot <- (plot_spacer() + upper_panel_wrapped + plot_spacer() + plot_layout(widths = c(1, 6, 1))) /
-  #                  final_side_by_side +
-  #                  plot_layout(heights = c(0.75, 1))
 
 design <- "
 AAAA
@@ -424,7 +284,7 @@ BBB#
 combined_plot <- upper_panel_wrapped + main_map +
   plot_layout(design = design, heights = c(1, 1))
 
- print(combined_plot)
+#  print(combined_plot)
 ggsave("../Output/Figures/Mn_IQR_and_Median_Grid_Map_Africa.svg",
        plot = combined_plot,
        width = 8, height = 8)

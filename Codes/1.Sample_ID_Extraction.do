@@ -174,9 +174,25 @@ replace village_id = substr(sample_ID, 1, 3) if missing(village_id)
 
 
 
-save "../Processed Stata Dta/Sample_ID_Log.dta", replace
-
-
+save "../Original Data/Sample_ID_Log.dta", replace
+preserve
+	use "D:\Foundation First Pilot\02_Follow-up Survey\01_Parent Survey\04_clean_data_pii\FF_PARENT_EL_SURVEY_clean_pii_data.dta", clear
+	keep village new_village_id
+	duplicates drop
+	rename new_village_id village_id_BL
+	rename village village_name
+	tempfile village_name_id
+	save `village_name_id', replace
+restore
+merge m:1 village_name using `village_name_id'
+drop village_name
+assert _merge==3
+drop _merge
+**GPS: round to 2 decimal places to avoid PII concern (precision = ~1.1 km)
+replace GPS_lat = round(GPS_lat, 0.01)
+replace GPS_long = round(GPS_long, 0.01)
+replace GPS_altit = round(GPS_altit, 50)
+save "../Original Data/Sample_ID_Log.dta", replace
 
 
 
