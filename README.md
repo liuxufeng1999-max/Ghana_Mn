@@ -21,7 +21,7 @@ ssc install coefplot    // coefficient plots
 ssc install sensemakr   // sensitivity analysis (Cinelli & Hazlett)
 ```
 
-**R 4.1 or higher** — Used only for `Sample_Map.R` (called from `MASTER.do` via Rscript). The following CRAN packages are required:
+**R 4.1 or higher** — Used only for `3B.Sample_Map.R` (called from `MASTER.do` via Rscript). The following CRAN packages are required:
 
 `sf`, `ggplot2`, `dplyr`, `patchwork`, `cowplot`, `rnaturalearth`, `rnaturalearthdata`, `geosphere`, `ggspatial`, `igraph`, `FNN`, `sfnetworks`, `viridis`, `scico`, `svglite`, `rstudioapi`
 
@@ -37,12 +37,12 @@ Some scripts in the pipeline read **personally identifiable information (PII)** 
 |---|--------|-------------|
 | 0 | `MASTER.do` | Sets global paths and runs all scripts in order. |
 | 1 | `1.Sample_ID_Extraction.do` | Builds the master Sample ID Log (see details below). |
-| 3 | `3.Lab_Result_Processing.do` | Reads lab results, creates WHO/EPA threshold indicators, and merges with child-level data from the FF-Pilot. |
+| 2 | `2.Lab_Result_Processing.do` | Reads lab results, creates WHO/EPA threshold indicators, and merges with child-level data from the FF-Pilot. |
 | 3A1 | `3A1.Sachet_Water_Processing.do` | Sachet water sample ID and results processing. |
 | 3A2 | `3A2.Sachet_Specifics.do` | Additional sachet-water-specific analysis. |
-| — | `Sample_Map.R` | Generates sample location maps (called from `MASTER.do` via Rscript). |
-| 4 | `4.Evaluation.do` | Pre-processing, descriptive statistics, kernel-density plots, and balance tables. |
-| 4A | `4A.Manganese_Evaluation.do` | Main empirical analysis — Mn exposure and child development outcomes, including school-level exposure. |
+| 3B | `3B.Sample_Map.R` | Generates sample location maps (called from `MASTER.do` via Rscript). |
+| 4A | `4A.Evaluation_Descriptive.do` | Pre-processing, descriptive statistics, kernel-density plots, and balance tables. |
+| 4B | `4B.Evaluation_Quantiative.do` | Main empirical analysis — Mn exposure and child development outcomes, including school-level exposure. |
 
 ### `1.Sample_ID_Extraction.do`
 
@@ -65,11 +65,11 @@ This script constructs a master **Sample ID Log** by extracting and harmonizing 
 4. **Sachet (vendor) water samples** — Extracts sample IDs and GPS coordinates for sachet water purchased from vendors.
 5. **Appends all four sources** into a single dataset, creates indicator variables for each sample type, and saves the consolidated master log.
 
-**GPS coordinate anonymization:** The original field GPS data were recorded with 6 decimal places in latitude and longitude (~0.11 m precision; device accuracy ~10 m). To protect respondent privacy, coordinates are rounded to 2 decimal places (~1.1 km precision) before saving. Altitude is rounded from its original 1-decimal-place precision to the nearest 50 meters; altitude is not used in the analysis. These reduced-precision coordinates are sufficient for the district-level maps produced by `Sample_Map.R` while preventing identification of individual sampling locations.
+**GPS coordinate anonymization:** The original field GPS data were recorded with 6 decimal places in latitude and longitude (~0.11 m precision; device accuracy ~10 m). To protect respondent privacy, coordinates are rounded to 2 decimal places (~1.1 km precision) before saving. Altitude is rounded from its original 1-decimal-place precision to the nearest 50 meters; altitude is not used in the analysis. These reduced-precision coordinates are sufficient for the district-level maps produced by `3B.Sample_Map.R` while preventing identification of individual sampling locations.
 
 **Output:** `Original Data/Sample_ID_Log.dta` — a de-identified crosswalk containing sample IDs, anonymized GPS coordinates, district/village identifiers, and sample-type flags.
 
-### `3.Lab_Result_Processing.do`
+### `2.Lab_Result_Processing.do`
 
 This script imports lab results for 9 heavy metals (Pb, Hg, Zn, Cd, Mn, Fe, Cr, Al, Cu), merges them with the sample ID log, generates descriptive outputs, and builds the main child-level analysis dataset.
 
@@ -100,18 +100,18 @@ This script imports lab results for 9 heavy metals (Pb, Hg, Zn, Cd, Mn, Fe, Cr, 
 | File | Description |
 |---|---|
 | `Processed Stata Dta/Lab Test Results.dta` | Sample-level lab results with threshold flags |
-| `Output/Feed_into_GEE_Test_Results_with_GPS.csv` | GPS + Mn data fed into `Sample_Map.R` |
-| `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Main child-level analysis file (used by scripts 4 and 4A) |
+| `Output/Feed_into_GEE_Test_Results_with_GPS.csv` | GPS + Mn data fed into `3B.Sample_Map.R` |
+| `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Main child-level analysis file (used by scripts 4A and 4B) |
 | `Output/Tables/Table1_Heavy_Metals_by_Sample_Water_Source.csv` | **Table 1**: heavy metal distributions by water source |
 | `Output/Figures/Fig2_IQR_Mn_by_Sources.pdf/.svg` | **Figure 2**: Mn IQR box plots by water source |
 
-### `Sample_Map.R`
+### `3B.Sample_Map.R`
 
 This R script generates **Figure 1** — a two-panel map of the study area and manganese concentrations at sampling locations. It is called from `MASTER.do` via `Rscript` and sets its working directory automatically to the `Codes/` folder.
 
 **What the script does:**
 
-1. **Load spatial data** — Reads sample coordinates with Mn concentrations from `Feed_into_GEE_Test_Results_with_GPS.csv` (produced by script 3). Loads regional and district boundary shapefiles (DHS subnational boundaries, district boundaries), West Africa and Ghana country outlines (via `rnaturalearth`), and HydroSHEDS river network lines from Google Earth Engine.
+1. **Load spatial data** — Reads sample coordinates with Mn concentrations from `Feed_into_GEE_Test_Results_with_GPS.csv` (produced by script 2). Loads regional and district boundary shapefiles (DHS subnational boundaries, district boundaries), West Africa and Ghana country outlines (via `rnaturalearth`), and HydroSHEDS river network lines from Google Earth Engine.
 2. **Process sampling coordinates** — Filters observations with valid GPS and Mn data, converts to spatial points (WGS 84), and projects to UTM Zone 30N (EPSG:32630) for metric distance calculations. Substitutes below-LOD Mn values with batch-specific LOD/sqrt(2).
 3. **Classify sample types** — Categorizes each observation as Household, School, River, or Vendor based on sample-type indicator flags.
 4. **Panel A — Study area overview and sampling locations** — Combines two sub-plots: (i) a West Africa inset map highlighting Ghana with a red box around the study area, and (ii) a zoomed-in map showing sample points by type (color- and shape-coded for Household, School, River, Vendor), four study district boundaries (Sefwi-Wiawso, Bibiani-Anhwiaso-Bekwai, Sefwi Akontombra, Juaboso), regional boundaries, and HydroSHEDS river lines.
@@ -122,7 +122,7 @@ This R script generates **Figure 1** — a two-panel map of the study area and m
 
 | File | Description |
 |---|---|
-| `Output/Feed_into_GEE_Test_Results_with_GPS.csv` | Sample GPS coordinates and Mn concentrations (from script 3) |
+| `Output/Feed_into_GEE_Test_Results_with_GPS.csv` | Sample GPS coordinates and Mn concentrations (from script 2) |
 | `Original Data/Spatial/dhsboundaries/shps/sdr_subnational_boundaries.*` | DHS subnational (regional) boundary shapefile |
 | `Original Data/Spatial/districts_archub/...` | District boundary shapefile |
 | `Original Data/Spatial/GEE_HydroShed_River/HydroSHEDS_rivers_buffer.*` | HydroSHEDS river network lines |
@@ -141,7 +141,7 @@ These two scripts process sachet (bagged) water samples, check brand registratio
 
 1. **Load sachet water data** — Reads vendor sachet and school sachet PII survey data from Cryptomator. Extracts sample IDs, brand names, and manufacturer names, harmonizing fields across the two sources.
 2. **FDA registration lookup** — Flags each sachet sample's brand as FDA-registered or not, based on the Ghana FDA public permit registry (`verifypermit.fdaghana.gov.gh`).
-3. **Merge with lab results** — Joins brand and registration information 1:1 on `sample_ID` with the sample-level lab results (`Lab Test Results.dta` from script 3).
+3. **Merge with lab results** — Joins brand and registration information 1:1 on `sample_ID` with the sample-level lab results (`Lab Test Results.dta` from script 2).
 4. **Prepare plot data** — Sorts sachet samples by Mn concentration, replaces below-LOD values with a small positive number for plotting, and marks duplicate brands with stars in the x-axis labels so readers can identify multiple samples from the same brand.
 5. **Save** — Outputs `Sachet Test Results_Only.dta` for use by `3A2.Sachet_Specifics.do`.
 
@@ -154,7 +154,7 @@ These two scripts process sachet (bagged) water samples, check brand registratio
 | File | Description |
 |---|---|
 | Sachet PII survey data (Cryptomator) | Brand names, manufacturer names, sample IDs (not included) |
-| `Processed Stata Dta/Lab Test Results.dta` | Sample-level lab results (from script 3) |
+| `Processed Stata Dta/Lab Test Results.dta` | Sample-level lab results (from script 2) |
 
 **Outputs:**
 
@@ -163,9 +163,9 @@ These two scripts process sachet (bagged) water samples, check brand registratio
 | `Processed Stata Dta/Sachet Test Results_Only.dta` | Sachet-only dataset with FDA registration flags and plot variables |
 | `Output/Figures/Fig3_Sachet_Mn_Concentration_FDARegistration.pdf/.svg` | **Figure 3**: Mn concentration by sachet sample, colored by FDA registration status |
 
-### `4.Evaluation.do`
+### `4A.Evaluation_Descriptive.do`
 
-This script performs additional data preparation, generates descriptive figures, and produces balance tables comparing covariates across Mn exposure groups. It also prepares the variables used by the subsequent quantitative analysis in `4A.Manganese_Evaluation.do`.
+This script performs additional data preparation, generates descriptive figures, and produces balance tables comparing covariates across Mn exposure groups. It also prepares the variables used by the subsequent quantitative analysis in `4B.Evaluation_Quantiative.do`.
 
 **What the script does:**
 
@@ -173,29 +173,29 @@ This script performs additional data preparation, generates descriptive figures,
 2. **Mn exposure classification** — Creates categorical Mn exposure variables: Mn below LOD vs. detected, and three-level groups (below LOD / detected but below threshold / above USEPA or WHO threshold). Also constructs analogous variables for school-level Mn exposure.
 3. **Below-LOD substitution** — Replaces zero-valued Mn and Fe concentrations with LOD/sqrt(2) (batch-specific), consistent with standard practice for censored environmental data. Generates log-transformed versions for regression use.
 4. **Income variable refinement** — Combines baseline and recalled income information to create finer income categories (below 5k, 5-10k, 10-20k, above 20k cedis).
-5. **Figure S1** — Generates `FigS1_kdensity_GSED_z_Score_and_Mn_Limits` (PDF + SVG): kernel density plots of standardized performance z-scores, comparing children with Mn below LOD vs. Mn detected in household water.
+5. **Figure S1** — Generates `FigS1_kdensity_z_Score_and_Mn_Limits` (PDF + SVG): kernel density plots of standardized performance z-scores, comparing children with Mn below LOD vs. Mn detected in household water.
 6. **Table S1** — Generates `TableS1_iebaltab_Mn_above_LOD_ChildCov.csv`: balance table comparing child-level covariates (gender, age, parental engagement, learning materials) across Mn exposure groups, with district fixed effects and clustered standard errors.
 7. **Table S2** — Generates `TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv`: balance table comparing household and caregiver characteristics (education, employment, income, household size, language, assets) across Mn exposure groups.
 8. **Table S3** — Generates `TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv`: balance table comparing perceived water safety and reported treatment methods (boiling, alum, filtration, chlorine) across Mn exposure groups.
-9. **Save** — Overwrites the analysis dataset with the newly created variables, ready for `4A.Manganese_Evaluation.do`.
+9. **Save** — Overwrites the analysis dataset with the newly created variables, ready for `4B.Evaluation_Quantiative.do`.
 
 **Input:**
 
 | File | Description |
 |---|---|
-| `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Child-level analysis file (from script 3) |
+| `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Child-level analysis file (from script 2) |
 
 **Outputs:**
 
 | File | Description |
 |---|---|
 | `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Updated with new variables (MCA indices, Mn categories, income categories, LOD-substituted values) |
-| `Output/Figures/FigS1_kdensity_GSED_z_Score_and_Mn_Limits.pdf/.svg` | **Figure S1**: kernel density of child development scores by Mn detection |
+| `Output/Figures/FigS1_kdensity_z_Score_and_Mn_Limits.pdf/.svg` | **Figure S1**: kernel density of child development scores by Mn detection |
 | `Output/Tables/Balance_Table/TableS1_iebaltab_Mn_above_LOD_ChildCov.csv` | **Table S1**: balance table — child covariates |
 | `Output/Tables/Balance_Table/TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv` | **Table S2**: balance table — household and caregiver characteristics |
 | `Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv` | **Table S3**: balance table — perceived water safety and treatment methods |
 
-### `4A.Manganese_Evaluation.do`
+### `4B.Evaluation_Quantiative.do`
 
 This script runs the main quantitative analysis examining the relationship between household water manganese (Mn) exposure and child development (standardized performance z-scores). All regressions use clustered standard errors at the caregiver level and include district fixed effects.
 
@@ -213,7 +213,7 @@ This script runs the main quantitative analysis examining the relationship betwe
 
 | File | Description |
 |---|---|
-| `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Child-level analysis file (from script 4) |
+| `Processed Stata Dta/Test Results Merged with EL Child Development.dta` | Child-level analysis file (from script 4A) |
 
 **Outputs:**
 

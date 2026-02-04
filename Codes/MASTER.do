@@ -38,28 +38,28 @@ cd "$master_loc"
 **(i) Read the Taylor-shared lab results and create some useful dummies represent the WHO/EPA Threshold; and
 **(ii) Merge with the BL+EL Child-Level Data from the FF-Pilot
 cd "$master_loc"
-do 3.Lab_Result_Processing.do
-
-**# Sample Map
-cd "$master_loc"
-shell "$R_loc" "Sample_Map.R"
+do 2.Lab_Result_Processing.do
 
 
 **#Sachet Water
 /* do 3A1.Sachet_Water_Processing.do  //<-- Sachet Water Sample ID and results processing */
 do 3A2.Sachet_Specifics.do
 
+**# Sample Map
+cd "$master_loc"
+shell "$R_loc" "3B.Sample_Map.R"
+
 **# Descriptive Statistics and Figures & Preparation
 **Some pre-processings and descriptive statistics
 **Descriptives: Kdensity Plots + Balance Tables
 cd "$master_loc"
-do 4.Evaluation.do
+do 4A.Evaluation_Descriptive.do
 
 
 **# Evaluation: Quantitative Analysis
 **Run the analysis - focus on Mn
 **Empiricals: Mn exposure and Child Development (with other alternative outcomes)
 cd "$master_loc"
-do 4A.Manganese_Evaluation.do
+do 4B.Evaluation_Quantiative.do
 
 
