@@ -401,7 +401,24 @@ restore
 keep if hh_sample_yn == 1
 
 rename HH_full_ID caregiver_id_EL
-merge 1:m caregiver_id_EL using "..\Original Data\Parent_Survey_isid_ChildCode.dta", gen(merge_caregiver)
+merge 1:m caregiver_id_EL using "..\Original Data\Parent_Survey_isid_ChildCode.dta", ///
+	keepusing( ///
+		enumerator_id caregiver_id sch_id new_village_id cgver_id_el child_code focal_child_yn child_male child_male_BL age_chld_months_EL ///
+		theta_all_30_48m theta_motor_30_48m theta_language_30_48m theta_socio_30_48m theta_cognitive_30_48m theta_adaptive_30_48m ///
+		caregiver_id_BL prim_caregiver_female_BL age_BL ///
+		nature_employ_unemp nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL ///
+		high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL ///
+		num_pple_hsehld num_chld_hsehld_17 num_chld_hsehld_5 ///
+		own_house_BL own_land_BL own_othr_hse_BL own_agric_land_BL ///
+		hme_made_toys_yn_BL toys_shop_yn_BL hsehld_objts_yn_BL objts_ousdie_yn_BL draw_write_materials_yn_BL puzzle_yn_BL ///
+		stories_yn stories_yn_BL counted_yn counted_yn_BL played_yn played_yn_BL taken_chld_work_yn taken_chld_work_yn_BL ///
+		who_engage_acti_mother_BL who_engage_acti_father_BL who_engage_acti_AnoRel_BL ///
+		annual_income_geq5k_BL lyear_income_leq5k lyear_income_geq10k lyear_income_geq15k lyear_income_geq20k ///
+		main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL ///
+		school_respondent_BL lost_in_EL dist_code treatment sch_id ///
+		main_drink_wtr_safe treat_drink_water_yn means_treat_cook_1 means_treat_cook_2 means_treat_cook_3 means_treat_cook_4 ///
+		switch_drink_wtr_dry main_drink_wtr_dry_safe ///
+	) gen(merge_caregiver)
 drop if lost_in_EL!=0
 merge m:1 new_village_id using `river_test', gen(merge_river)
 distinct new_village_id if merge_river==1
@@ -468,8 +485,6 @@ gen lost_in_watersample = caregiver_id_EL=="100151011P2" | caregiver_id_EL=="110
 assert new_village_id == "50D" if caregiver_id_EL=="100151011P2" | caregiver_id_EL=="110025106P1"
 assert Batch==1 if new_village_id=="50D" & sample_water_source==1 //-->all borehole sample are in batch 1 for village_id=="50D"
 replace Batch = 1 if missing(Batch)
-
-capture drop WHO_Pb_higher WHO_Hg_higher WHO_Cd_higher WHO_Mn_higher WHO_Cr_higher WHO_Cu_higher WHO_Any_higher EPA_prim_Pb_higher EPA_prim_Hg_higher EPA_prim_Cd_higher EPA_prim_Cr_higher EPA_prim_Cu_higher EPA_sec_Zn_higher EPA_sec_Mn_higher EPA_sec_Fe_higher EPA_sec_Al_higher EPA_sec_Cu_higher EPA_PrimSec_Pb_higher EPA_PrimSec_Hg_higher EPA_Prim_Any_higher EPA_Sec_Any_higher EPA_PrimSec_higher WHO_EPA_Any_higher any_limit_Pb_higher any_limit_Hg_higher any_limit_Cd_higher any_limit_Cr_higher any_limit_Cu_higher any_limit_Mn_higher any_limit_Zn_higher any_limit_Fe_higher any_limit_Al_higher
 
 **# WHO Threshold
 local WHO_metals Pb Hg Cd Mn Cr Cu
@@ -557,6 +572,14 @@ foreach var of varlist `metals' {
 }
 
 
+
+**Drop intermediate variables before saving
+/* capture drop merge_caregiver merge_river merge_sachet merge_school
+capture drop mean_irt_* sd_irt_*
+capture drop sample_water_source_brief sample_water_source_plot
+capture drop river_duplicates_yn school_sachet_yn
+capture drop sachet_*_mean river_*_mean
+capture drop lost_in_watersample */
 
 **Save the file
 save "../Processed Stata Dta\Test Results Merged with EL Child Development.dta", replace
