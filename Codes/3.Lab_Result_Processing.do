@@ -120,7 +120,6 @@ capture drop sample_water_source_brief
 recode sample_water_source (1 = 1 "Borehole") (2 = 2 "River") (3 4 = 3 "Piped Water") (5 = 4 "Well") (7 = 5 "Sachet"), gen(sample_water_source_brief) label(water_source_ID_brief) test
 
 
-save "..\Processed Stata dta\Lab Test Results.dta", replace
 
 
 **# Summary Statistics
@@ -187,14 +186,66 @@ graph export "..\Output\Figures\IQR_Mn_by_Sources.svg", ///
 	name(Mn_hbox) as(svg) replace
 
 
+* RTF-compatible labels (no LaTeX commands)
+label variable WHO_Any_higher "Any Metals: Exceed WHO Limit"
+label variable EPA_Prim_Any_higher "  Exceed EPA Primary Limit"
+label variable EPA_Sec_Any_higher "  Exceed EPA Secondary Limit"
+local metals Pb Hg Cd Cr Cu Mn Zn Fe Al
+foreach var of varlist `metals' {
+	label var `var' "`var' (ug/L)"
+}
 
-// 	///
-//     title("Manganese concentrations by water source", size(medium)) ///
-//     note("Boxes show 25th–75th percentiles; whiskers show min–max. Reference lines at 50 and 80 µg/L.", size(vsmall))
+	**Main Table: Distribution by Sample Source for ALL metals
+local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_higher any_limit_Hg_higher any_limit_Cd_higher any_limit_Cr_higher any_limit_Cu_higher any_limit_Mn_higher any_limit_Zn_higher any_limit_Fe_higher any_limit_Al_higher Pb Hg Zn Cd Mn Fe Cr Al Cu "
+	qui eststo all: estpost sum `limit' if river_duplicates_yn==0
+	qui eststo borehole: estpost sum `limit' if sample_water_source_brief == 1
+	qui eststo river: estpost sum `limit' if sample_water_source_brief == 2 & river_duplicates_yn==0
+	qui eststo pipe: estpost sum `limit' if sample_water_source_brief == 3
+	qui eststo well: estpost sum `limit' if sample_water_source_brief==4
+	qui eststo sachet: estpost sum `limit' if sample_water_source_brief==5
+esttab all borehole river pipe well sachet using "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source.csv", label ///
+	star(* 0.10 ** 0.05 *** 0.01)	///
+	replace main(mean %6.2f) aux(sd) mtitle("Total" "Borehole" "River" "Piped Water" "Well" "Sachet") nonote
+
+	* Post-process CSV: replace "0.00" with "Below LOD" only for metal rows
+	tempname fh3 fw3
+	local csvfile "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source.csv"
+	local csvtemp "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source_temp.csv"
+	file open `fh3' using "`csvfile'", read text
+	file open `fw3' using "`csvtemp'", write text
+	local prev_metal = 0
+	file read `fh3' line
+	while r(eof)==0 {
+	    * Check if this line is a metal concentration row
+	    local is_metal = 0
+	    if strpos(`"`line'"', "(ug/L)") > 0 {
+	        local is_metal = 1
+	    }
+	    * Replace "0.00" with "Below LOD" on metal mean rows
+	    if `is_metal' {
+	        local line = subinstr(`"`line'"', "0.00", "Below LOD", .)
+	    }
+	    * Replace "(0)" on SD rows only if previous row was a metal row
+	    if `prev_metal' {
+	        local line = subinstr(`"`line'"', "(0)", "", .)
+	    }
+	    local prev_metal = `is_metal'
+	    file write `fw3' `"`line'"' _n
+	    file read `fh3' line
+	}
+	file close `fh3'
+	file close `fw3'
+	erase "`csvfile'"
+	copy "`csvtemp'" "`csvfile'"
+	erase "`csvtemp'"
 
 
-	**Main Table: Mn statistics by Sample Source
-local stats   min p25 p50 p75 max mean count
+save "..\Processed Stata dta\Lab Test Results.dta", replace
+export delimited using "../Output/Feed_into_GEE_Test_Results_with_GPS.csv", nolab replace
+
+
+	**Appendix Table: Mn statistics by Sample Source
+/* local stats   min p25 p50 p75 max mean count
 quietly estpost tabstat Mn if river_duplicates_yn==0, statistics(`stats')
 
 matrix M = J(7, 1, .)
@@ -227,11 +278,28 @@ foreach code of local src_codes {
 matrix rownames M =  "Min" "25th percentile" "Median" "75th percentile" "Max" "Mean" "N"
 
 * Colnames (with spaces allowed)
-matrix colnames M = "Pooled" "Borehole" "River" "Piped Water" "Well" "Sachet"
+matrix colnames M = "Total" "Borehole" "River" "Piped Water" "Well" "Sachet"
 
-esttab matrix(M, fmt(2)) using "../Output/Tables/Mn_Distributions_by_Sample_Water_Source.tex", ///
-    replace nomtitles ///
-	substitute("PipedWater" "Piped Water" " 0.00" "Below LOD" "Pooled" "Total" )
+esttab matrix(M, fmt(2)) using "../Output/Tables/Mn_Distributions_by_Sample_Water_Source.csv", ///
+    replace nomtitles
+
+* Post-process CSV: replace "0.00" with "Below LOD"
+tempname fh fw
+local csvfile "../Output/Tables/Mn_Distributions_by_Sample_Water_Source.csv"
+local csvtemp "../Output/Tables/Mn_Distributions_by_Sample_Water_Source_temp.csv"
+file open `fh' using "`csvfile'", read text
+file open `fw' using "`csvtemp'", write text
+file read `fh' line
+while r(eof)==0 {
+    local line = subinstr(`"`line'"', "0.00", "Below LOD", .)
+    file write `fw' `"`line'"' _n
+    file read `fh' line
+}
+file close `fh'
+file close `fw'
+erase "`csvfile'"
+copy "`csvtemp'" "`csvfile'"
+erase "`csvtemp'" */
 
 // esttab  matrix(M,transpose) using "..\Output\Tables\Mn_Distributions_by_Sample_Water_Source.tex" , ///
 // 	coeflabels(mean "Mean" min  "Min" p25  "25th percentile" p50  "Median"  p75  "75th percentile" max  "Max" count "N") ///
@@ -239,40 +307,37 @@ esttab matrix(M, fmt(2)) using "../Output/Tables/Mn_Distributions_by_Sample_Wate
 // 	nomtitles replace  booktabs ///
 
 	**Appendix Table: Distribution by Sample Ownership for ALL metals
-label variable WHO_Any_higher "Any Metals: \\ \hspace{20pt} Exceed WHO Limit"
-label variable EPA_Prim_Any_higher "\hspace{20pt} Exceed EPA Primary Limit"
-label variable EPA_Sec_Any_higher "\hspace{20pt} Exceed EPA Secondary Limit"
-label variable EPA_PrimSec_higher "\hspace{20pt} Exceed EPA Primary or Secondary Limit"
-label variable WHO_EPA_Any_higher "\hspace{20pt} Exceed EPA or WHO Limit"
 
-label variable any_limit_Pb_higher "Exceed EPA or WHO Limit: \\ \hspace{20pt} Pb"
-local metals Pb Hg Cd Cr Cu Mn Zn Fe Al
-foreach var of varlist `metals' {
-	label var `var' "`var' ({\ensuremath{\mu g/L})"
-}
-
-local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_higher any_limit_Hg_higher any_limit_Cd_higher any_limit_Cr_higher any_limit_Cu_higher any_limit_Mn_higher any_limit_Zn_higher any_limit_Fe_higher any_limit_Al_higher Pb Hg Zn Cd Mn Fe Cr Al Cu "
+/* local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_higher any_limit_Hg_higher any_limit_Cd_higher any_limit_Cr_higher any_limit_Cu_higher any_limit_Mn_higher any_limit_Zn_higher any_limit_Fe_higher any_limit_Al_higher Pb Hg Zn Cd Mn Fe Cr Al Cu "
 	qui eststo all: estpost sum `limit' if river_duplicates_yn==0
 	qui eststo hh: estpost sum `limit' if hh_sample_yn == 1
 	qui eststo river: estpost sum `limit' if river_sample_yn == 1 & river_duplicates_yn==0
 	qui eststo school: estpost sum `limit' if school_sample_yn == 1
 	qui eststo vsachet: estpost sum `limit' if vendor_sachet_yn==1
-	esttab all hh river school vsachet using "..\Output\Tables\Heavy_Metals_by_Sample_Water_Ownership.tex", label ///
+	esttab all hh river school vsachet using "..\Output\Tables\Heavy_Metals_by_Sample_Water_Ownership.csv", label ///
 	star(* 0.10 ** 0.05 *** 0.01)	///
-	replace main(mean %6.2f) aux(sd) onecell mtitle("Pooled" "Non-Sachet Household" "River Samples" "School Samples" "Sachet from Vendors") substitute( "0.00 (0)" "Below LOD" "Pooled" "Total" )
+	replace main(mean %6.2f) aux(sd) onecell mtitle("Total" "Non-Sachet Household" "River Samples" "School Samples" "Sachet from Vendors")
+
+	* Post-process CSV: replace "0.00 (0)" with "Below LOD"
+	tempname fh2 fw2
+	local csvfile "..\Output\Tables\Heavy_Metals_by_Sample_Water_Ownership.csv"
+	local csvtemp "..\Output\Tables\Heavy_Metals_by_Sample_Water_Ownership_temp.csv"
+	file open `fh2' using "`csvfile'", read text
+	file open `fw2' using "`csvtemp'", write text
+	file read `fh2' line
+	while r(eof)==0 {
+	    local line = subinstr(`"`line'"', "0.00 (0)", "Below LOD", .)
+	    file write `fw2' `"`line'"' _n
+	    file read `fh2' line
+	}
+	file close `fh2'
+	file close `fw2'
+	erase "`csvfile'"
+	copy "`csvtemp'" "`csvfile'"
+	erase "`csvtemp'" */
 
 
-	**Appendix Table: Distribution by Sample Source for ALL metals
-local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_higher any_limit_Hg_higher any_limit_Cd_higher any_limit_Cr_higher any_limit_Cu_higher any_limit_Mn_higher any_limit_Zn_higher any_limit_Fe_higher any_limit_Al_higher Pb Hg Zn Cd Mn Fe Cr Al Cu "
-	qui eststo all: estpost sum `limit' if river_duplicates_yn==0
-	qui eststo borehole: estpost sum `limit' if sample_water_source_brief == 1
-	qui eststo river: estpost sum `limit' if sample_water_source_brief == 2 & river_duplicates_yn==0
-	qui eststo pipe: estpost sum `limit' if sample_water_source_brief == 3
-	qui eststo well: estpost sum `limit' if sample_water_source_brief==4
-	qui eststo sachet: estpost sum `limit' if sample_water_source_brief==5
-esttab all borehole river pipe well sachet using "..\Output\Tables\Heavy_Metals_by_Sample_Water_Source.tex", label ///
-	star(* 0.10 ** 0.05 *** 0.01)	///
-	replace main(mean %6.2f) aux(sd) onecell mtitle("Total" "Borehole" "River" "Piped Water" "Well" "Sachet") nonote
+
 
 **# Merge with the Caregiver Survey
 
@@ -365,13 +430,19 @@ foreach s in all_30_48m motor_30_48m language_30_48m socio_30_48m cognitive_30_4
  }
 
 
-
-
-
-local metals Pb Hg Zn Cd Mn Fe Cr Al Cu
+**sachet drinking households: we didnt have water sample for them, so we will impute the average sachet water concentration within their village
 **3 caregivers are missing in the water sampling: 100110081P2 , 100151011P2 , and 110025106P1
 **among them 100110081P2 report to have sachet water as their primary drinking water
 **100151011P2 , and 110025106P1 report to drink borehole water
+
+replace sample_water_source = 6 if missing(sample_water_source) & caregiver_id_EL!="100151011P2" & caregiver_id_EL != "110025106P1" & caregiver_id_EL!="100110081P2"
+
+local metals Pb Hg Zn Cd Mn Fe Cr Al Cu
+foreach var of varlist `metals' {
+	replace `var' = sachet_`var'_mean if missing(`var') &  sample_water_source == 6 //<-- replace village mean sachet concentration for those sachet households
+}
+replace Batch = Batch_Sachet if missing(Batch) &  sample_water_source == 6
+
 foreach var of varlist `metals' {
 	replace `var' = sachet_`var'_mean if missing(`var') & caregiver_id_EL=="100110081P2"
 }

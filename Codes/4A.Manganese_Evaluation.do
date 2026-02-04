@@ -1,5 +1,5 @@
 /* 4A. Evaluation Specific to Mn */
-use "$master_loc\Processed Stata Dta\Test Results Merged with EL Child Development.dta", clear
+use "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", clear
 
 
 **# Primary Results: Y = f(Mn) + X + e
@@ -40,7 +40,7 @@ foreach var of varlist `outcome' {
 	local i = `i' + 1
 }
 
-esttab `model' using "..\Output\Tables\EPA_LOD_Mn_Exposure_ChildDev.tex",  ///
+esttab `model' using "..\Output\Tables\EPA_LOD_Mn_Exposure_ChildDev.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 		mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
@@ -255,7 +255,8 @@ local cov_always "Batch treatment i.dist_code"
 local cov "age_chld_months_EL child_male "
 local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 quietly reg z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add' , vce(cluster caregiver_id_BL)
-cd "..\Output\Tables\"
+/* cd "$master_loc"
+cd "..\Output\Tables\" */
 sensemakr ///
 	z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add', ///
 	treat(Mn_LOD_EPA3) alpha(0.1) ///
@@ -281,13 +282,18 @@ local cov_always "Batch treatment i.dist_code"
 local cov "age_chld_months_EL child_male "
 local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 quietly reg z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add' , vce(cluster caregiver_id_BL)
-cd "..\Output\Tables\"
+/* cd "$master_loc"
+cd "..\Output\Tables\" */
 sensemakr ///
 	z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add', ///
 	treat(log_Mn_LODsq2) alpha(0.1) ///
 	gbenchmark(hh_learn_mca1 par_involv_mca1 recall_income_geq20k recall_income_geq10k recall_income_geq5k) gname(Covariates) extremeplot elim(0 0.2)  contourplot kd(0.5 1 2) clines(5) ///
 	latex(Sensemakr_logMn_Results) r2yz(1 0.75 0.5 0.25)
 graph copy s_extremeplot logMn_extreme, replace
+grc1leg Mn_EPA_extreme	logMn_extreme, name(sensemakr_EPA_Log_Extreme, replace) xcommon
+graph export ///
+	"..\Output\Figures\Sensemakr_ExtremePlot_logEPA_Combined.svg", ///
+	as(svg) name(sensemakr_EPA_Log_Extreme) replace
 // graph copy s_countourplot Mn_log_countour, replace
 
 * Store sensemakr results for log_Mn_LODsq2
@@ -300,10 +306,11 @@ local log_rv_q = e(rv_q) * 100
 local log_rv_qa = e(rv_qa) * 100
 local log_r2yzdx = bounds_log[2,4] * 100
 local log_r2dzx = bounds_log[2,3] * 100
+cd "$master_loc"
 
 * Export combined sensemakr table as RTF
 tempname rtf
-local rtffile "$master_loc\Output\Tables\Sensemakr_Combined_Results.rtf"
+local rtffile "..\Output\Tables\Sensemakr_Combined_Results.rtf"
 file open `rtf' using "`rtffile'", write replace
 file write `rtf' "{\rtf1\ansi" _n
 file write `rtf' "{\fonttbl{\f0 Times New Roman;}}" _n
@@ -344,10 +351,6 @@ file write `rtf' "\row" _n
 file write `rtf' "}" _n
 file close `rtf'
 
-grc1leg Mn_EPA_extreme	logMn_extreme, name(sensemakr_EPA_Log_Extreme, replace) xcommon
-
-// grc1leg combine Mn_EPA_countour s_countourplot, legend(off)
-
 capture drop if missing(child_code)
 
 
@@ -366,9 +369,9 @@ label var School_nonMn_conc "rowmax(Pb_max Fe_max Cr_max Al_max Cu_max)"
 
 
 //====Categorical Specification===//
-local cov_always "Batch sample_water_source_1 sample_water_source_2 sample_water_source_6 treatment i.dist_code"
-local cov "age_chld_months_EL child_male prim_caregiver_female_BL"
-local cov_add "own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_secondary_BL"
+local cov_always "Batch treatment i.dist_code"
+local cov "age_chld_months_EL child_male "
+local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 local title "GSED"
 local nonMn Pb Fe Cr Al Cu Household_nonMn_conc
 local mtitle "Pb Fe Cr Al Cu ALL"
@@ -418,9 +421,9 @@ coefplot ///
 // 	as(pdf) name(coefplot_rHHnonMn) replace
 
 //====log(Mn) Specification===//
-local cov_always "Batch sample_water_source_1 sample_water_source_2 sample_water_source_6 treatment i.dist_code"
-local cov "age_chld_months_EL child_male prim_caregiver_female_BL"
-local cov_add "own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_secondary_BL"
+local cov_always "Batch treatment i.dist_code"
+local cov "age_chld_months_EL child_male "
+local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 local model ""
 local title "GSED"
 local nonMn Pb Fe Cr Al Cu Household_nonMn_conc
@@ -472,6 +475,7 @@ graph combine ///
 	coefplot_rHHnonMn_log coefplot_rHHnonMn, ///
 	row(1) name(coefplot_rHHnonMn, replace)
 
+cd "$master_loc"
 graph export ///
 	"..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.pdf", ///
 	as(pdf) name(coefplot_rHHnonMn) replace
@@ -482,9 +486,9 @@ graph export ///
 **remove HH and School contaminated metal
 
 //====Categorical Specification===//
-local cov_always "Batch sample_water_source_1 sample_water_source_2 sample_water_source_6 treatment i.dist_code"
-local cov "age_chld_months_EL child_male prim_caregiver_female_BL"
-local cov_add "own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_secondary_BL"
+local cov_always "Batch treatment i.dist_code"
+local cov "age_chld_months_EL child_male "
+local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 local title "GSED"
 local nonMn Pb Fe Cr Al Cu
 local i = 1
@@ -539,9 +543,9 @@ coefplot ///
 // 	as(pdf) name(coefplot_rHHSchnonMn) replace
 
 //====log(Mn) Specification===//
-local cov_always "Batch sample_water_source_1 sample_water_source_2 sample_water_source_6 treatment i.dist_code"
-local cov "age_chld_months_EL child_male prim_caregiver_female_BL"
-local cov_add "own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_secondary_BL"
+local cov_always "Batch treatment i.dist_code"
+local cov "age_chld_months_EL child_male "
+local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 local model ""
 local title "GSED"
 local nonMn Pb Fe Cr Al Cu
@@ -595,53 +599,11 @@ graph combine ///
 	coefplot_rHHSchnonMn_log coefplot_rHHSchnonMn_EPA , ///
 	row(1) name(coefplot_rHHSchnonMn, replace)
 
+cd "$master_loc"
 graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.pdf", ///
 	as(pdf) name(coefplot_rHHSchnonMn) replace
 
 graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.svg", ///
 	as(svg) name(coefplot_rHHSchnonMn) replace
 
-save "$master_loc\Processed Stata Dta\Test Results Merged with EL Child Development.dta", replace
-
-
-**US EPA Secondary Standards: Mn>=50
-local if_cond "focal_child_yn==1|focal_child_yn==0" //-->need to be focal child and not enrolled in other schools (so either not enrolled in school OR enrolled in study school)
-local cov_always "Batch sample_water_source_1 sample_water_source_2 sample_water_source_6 treatment i.dist_code"
-local cov "age_chld_months_EL child_male prim_caregiver_female_BL"
-local cov_add "own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_secondary_BL"
-local model ""
-local title "GSED Hlth ChldDev"
-local i = 1
-
-local outcome  z_irt_all_30_48m hlth_stat_chld_healthier_BL child_dev_age_advanced_BL
-foreach var of varlist `outcome' {
-
-	local est_tit : word `i' of `title'
-	reg `var'  EPA_sec_Mn_higher i.school_respondent_BL##ib0.school_Mn_EPA_higher school_respondent_BL `cov_always' if `if_cond' , vce(cluster caregiver_id_BL)
-		est store `est_tit'_MnEPA_sch
-		quietly estadd local Cov = "No"
-		quietly estadd local Cov_add = "No"
-		est store `est_tit'_MnEPA_sch
-		local model `model' `est_tit'_MnEPA_sch
-
-	reg `var'  EPA_sec_Mn_higher i.school_respondent_BL##ib0.school_Mn_EPA_higher school_respondent_BL `cov_always' `cov' if `if_cond' , vce(cluster caregiver_id_BL)
-		est store `est_tit'_MnEPA_sch_cov
-		quietly estadd local Cov = "Yes"
-		quietly estadd local Cov_add = "No"
-		est store `est_tit'_MnEPA_sch_cov
-		local model `model' `est_tit'_MnEPA_sch_cov
-
-	reg `var'  EPA_sec_Mn_higher i.school_respondent_BL##ib0.school_Mn_EPA_higher school_respondent_BL `cov_always' `cov' `cov_add' if `if_cond' , vce(cluster caregiver_id_BL)
-		est store `est_tit'_MnEPA_sch_addcov
-		quietly estadd local Cov = "Yes"
-		quietly estadd local Cov_add = "Yes"
-		est store `est_tit'_MnEPA_sch_addcov
-		local model `model' `est_tit'_MnEPA_sch_addcov
-	local i = `i' + 1
-}
-esttab `model' using "..\Output\Tables\EPA_Mn_and_SchoolExposure.rtf",  ///
-    stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
-		mtitle("GSED" "GSED" "GSED" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
-    b se star(* 0.1 ** 0.05 *** 0.01) keep(EPA_sec_Mn_higher *school_Mn_EPA_higher) ///
-	coeflabel(1.school_Mn_EPA_higher "School Mn Above EPA" 0.school_respondent_BL#1.school_Mn_EPA_higher "Not FF X School Mn" 1.school_respondent_BL#1.school_Mn_EPA_higher "FF X School Mn above EPA") ///
-	replace nonote label noomitted nobase
+save "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", replace
