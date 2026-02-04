@@ -190,6 +190,10 @@ graph export "..\Output\Figures\IQR_Mn_by_Sources.svg", ///
 label variable WHO_Any_higher "Any Metals: Exceed WHO Limit"
 label variable EPA_Prim_Any_higher "  Exceed EPA Primary Limit"
 label variable EPA_Sec_Any_higher "  Exceed EPA Secondary Limit"
+label variable EPA_PrimSec_higher "  Exceed EPA Primary or Secondary Limit"
+label variable WHO_EPA_Any_higher "  Exceed EPA or WHO Limit"
+
+label variable any_limit_Pb_higher "Exceed EPA or WHO Limit: Pb"
 local metals Pb Hg Cd Cr Cu Mn Zn Fe Al
 foreach var of varlist `metals' {
 	label var `var' "`var' (ug/L)"
