@@ -37,7 +37,6 @@ Some scripts in the pipeline read **personally identifiable information (PII)** 
 |---|--------|-------------|
 | 0 | `MASTER.do` | Sets global paths and runs all scripts in order. |
 | 1 | `1.Sample_ID_Extraction.do` | Builds the master Sample ID Log (see details below). |
-| 2 | `2.Test_Strip_Samples.do` | Processes field test-strip sample data. |
 | 3 | `3.Lab_Result_Processing.do` | Reads lab results, creates WHO/EPA threshold indicators, and merges with child-level data from the FF-Pilot. |
 | 3A1 | `3A1.Sachet_Water_Processing.do` | Sachet water sample ID and results processing. |
 | 3A2 | `3A2.Sachet_Specifics.do` | Additional sachet-water-specific analysis. |
@@ -174,7 +173,7 @@ This script performs additional data preparation, generates descriptive figures,
 2. **Mn exposure classification** — Creates categorical Mn exposure variables: Mn below LOD vs. detected, and three-level groups (below LOD / detected but below threshold / above USEPA or WHO threshold). Also constructs analogous variables for school-level Mn exposure.
 3. **Below-LOD substitution** — Replaces zero-valued Mn and Fe concentrations with LOD/sqrt(2) (batch-specific), consistent with standard practice for censored environmental data. Generates log-transformed versions for regression use.
 4. **Income variable refinement** — Combines baseline and recalled income information to create finer income categories (below 5k, 5-10k, 10-20k, above 20k cedis).
-5. **Figure S1** — Generates `FigS1_kdensity_GSED_z_Score_and_Mn_Limits` (PDF + SVG): kernel density plots of standardized child development scores (GSED z-scores), comparing children with Mn below LOD vs. Mn detected in household water.
+5. **Figure S1** — Generates `FigS1_kdensity_GSED_z_Score_and_Mn_Limits` (PDF + SVG): kernel density plots of standardized performance z-scores, comparing children with Mn below LOD vs. Mn detected in household water.
 6. **Table S1** — Generates `TableS1_iebaltab_Mn_above_LOD_ChildCov.csv`: balance table comparing child-level covariates (gender, age, parental engagement, learning materials) across Mn exposure groups, with district fixed effects and clustered standard errors.
 7. **Table S2** — Generates `TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv`: balance table comparing household and caregiver characteristics (education, employment, income, household size, language, assets) across Mn exposure groups.
 8. **Table S3** — Generates `TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv`: balance table comparing perceived water safety and reported treatment methods (boiling, alum, filtration, chlorine) across Mn exposure groups.
@@ -198,7 +197,7 @@ This script performs additional data preparation, generates descriptive figures,
 
 ### `4A.Manganese_Evaluation.do`
 
-This script runs the main quantitative analysis examining the relationship between household water manganese (Mn) exposure and child development (GSED z-scores). All regressions use clustered standard errors at the caregiver level and include district fixed effects.
+This script runs the main quantitative analysis examining the relationship between household water manganese (Mn) exposure and child development (standardized performance z-scores). All regressions use clustered standard errors at the caregiver level and include district fixed effects.
 
 **What the script does:**
 

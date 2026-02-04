@@ -126,9 +126,9 @@ twoway ///
 	(kdensity z_irt_all_30_48m if Mn_above_LOD == 1 ), ///
 	legend(pos(6) col(2) order(1 "Mn below LOD" 2 "Mn detected")) ///
 	xtitle("Standardized Child Development Score") ytitle("") name(z_irt_Mn, replace)
-graph export "..\Output\Figures\FigS1_kdensity_GSED_z_Score_and_Mn_Limits.pdf", ///
+graph export "..\Output\Figures\FigS1_kdensity_z_Score_and_Mn_Limits.pdf", ///
 	name(z_irt_Mn) as(pdf) replace
-graph export "..\Output\Figures\FigS1_kdensity_GSED_z_Score_and_Mn_Limits.svg", ///
+graph export "..\Output\Figures\FigS1_kdensity_z_Score_and_Mn_Limits.svg", ///
 	name(z_irt_Mn) as(svg) replace
 
 
