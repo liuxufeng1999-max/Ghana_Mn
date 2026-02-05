@@ -170,9 +170,9 @@ graph hbox Mn if river_duplicates_yn==0 & Mn<650, ///
 	marker(1, mfcolor(gs10) mlcolor(gs10) ) ///
 	name(Mn_hbox, replace)
 
-graph export "..\Output\Figures\Fig2_IQR_Mn_by_Sources.pdf", ///
+graph export "../Output/Figures/Fig2_IQR_Mn_by_Sources.pdf", ///
 	name(Mn_hbox) as(pdf) replace
-graph export "..\Output\Figures\Fig2_IQR_Mn_by_Sources.svg", ///
+graph export "../Output/Figures/Fig2_IQR_Mn_by_Sources.svg", ///
 	name(Mn_hbox) as(svg) replace
 
 
@@ -197,14 +197,14 @@ local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_
 	qui eststo pipe: estpost sum `limit' if sample_water_source_brief == 3
 	qui eststo well: estpost sum `limit' if sample_water_source_brief==4
 	qui eststo sachet: estpost sum `limit' if sample_water_source_brief==5
-esttab all borehole river pipe well sachet using "..\Output\Tables\Table1_Heavy_Metals_by_Sample_Water_Source.csv", label ///
+esttab all borehole river pipe well sachet using "../Output/Tables/Table1_Heavy_Metals_by_Sample_Water_Source.csv", label ///
 	star(* 0.10 ** 0.05 *** 0.01)	///
 	replace main(mean %6.2f) aux(sd) mtitle("Total" "Borehole" "River" "Piped Water" "Well" "Sachet") nonote
 
 	* Post-process CSV: replace "0.00" with "Below LOD" only for metal rows
 	tempname fh3 fw3
-	local csvfile "..\Output\Tables\Table1_Heavy_Metals_by_Sample_Water_Source.csv"
-	local csvtemp "..\Output\Tables\Table1_Heavy_Metals_by_Sample_Water_Source_temp.csv"
+	local csvfile "../Output/Tables/Table1_Heavy_Metals_by_Sample_Water_Source.csv"
+	local csvtemp "../Output/Tables/Table1_Heavy_Metals_by_Sample_Water_Source_temp.csv"
 	file open `fh3' using "`csvfile'", read text
 	file open `fw3' using "`csvtemp'", write text
 	local prev_metal = 0
@@ -234,7 +234,7 @@ esttab all borehole river pipe well sachet using "..\Output\Tables\Table1_Heavy_
 	erase "`csvtemp'"
 
 
-save "..\Processed Stata dta\Lab Test Results.dta", replace
+save "../Processed Stata dta/Lab Test Results.dta", replace
 export delimited GPS_lat GPS_long Mn Batch river_sample_yn school_sample_yn hh_sample_yn vendor_sachet_yn using "../Output/Feed_into_GEE_Test_Results_with_GPS.csv", nolab replace
 
 
