@@ -11,8 +11,8 @@ label var age_BL "Caregiver age"
 capture drop new_village_id_group
 egen new_village_id_group = group(new_village_id), label
 
-label var num_pple_hsehld "Household size"
-label var num_chld_hsehld_5 "Number of below-five children"
+label var num_pple_hsehld_BL "Household size"
+label var num_chld_hsehld_5_BL "Number of below-five children"
 
 	**# Covariates Dimension Reduction
 **household learning materials
@@ -168,7 +168,7 @@ erase "`csvtemp'"
 
 capture destring num_chld_hsehld_17, replace
 local caregiver_cov "prim_caregiver_female_BL age_BL nature_employ_unemp nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL school_respondent_BL"
-local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld num_chld_hsehld_17 own_house_BL own_land_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k recall_income_bel5k"
+local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld_BL num_chld_hsehld_17 own_house_BL own_land_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k recall_income_bel5k"
 iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
@@ -202,7 +202,7 @@ erase "`csvtemp'"
                           fix(dist_code) ///
                           savetex("../Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_CaregiverCov.tex") replace
 
-// local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld num_chld_hsehld_17 own_house_BL own_land_BL annual_income_geq5k_BL"
+// local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld_BL num_chld_hsehld_17 own_house_BL own_land_BL annual_income_geq5k_BL"
 local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld num_chld_hsehld_17 own_house_BL own_land_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k recall_income_bel5k"
 iebaltab `hh_cov'  if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
