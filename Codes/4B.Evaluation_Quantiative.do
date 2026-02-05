@@ -253,9 +253,16 @@ capture drop if missing(child_code)
 local cov_always "Batch treatment i.dist_code"
 local cov "age_chld_months_EL child_male "
 local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
+sum `cov_always' `cov' `cov_add'
 quietly reg z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add' , vce(cluster caregiver_id_BL)
 /* cd "$master_loc"
 cd "../Output/Tables/" */
+// sensemakr ///
+// 	z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add', ///
+// 	treat(Mn_LOD_EPA3) alpha(0.1) ///
+// 	gbenchmark(hh_learn_mca1 par_involv_mca1 recall_income_geq20k recall_income_geq10k recall_income_geq5k) gname(Covariates)  elim(0 0.2) kd(0.5 1 2) contourplot clines(5)  ///
+// 	 r2yz(1 0.75 0.5 0.25)
+set varabbrev on
 sensemakr ///
 	z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add', ///
 	treat(Mn_LOD_EPA3) alpha(0.1) ///
@@ -281,8 +288,7 @@ local cov_always "Batch treatment i.dist_code"
 local cov "age_chld_months_EL child_male "
 local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 quietly reg z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add' , vce(cluster caregiver_id_BL)
-/* cd "$master_loc"
-cd "../Output/Tables/" */
+set varabbrev on
 sensemakr ///
 	z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add', ///
 	treat(log_Mn_LODsq2) alpha(0.1) ///
@@ -309,7 +315,7 @@ cd "$master_loc"
 
 * Export combined sensemakr table as RTF
 tempname rtf
-local rtffile "../Output/Tables/Table4_Sensemakr_Combined_Results.rtf"
+local rtffile "..\Output\Tables\Table4_Sensemakr_Combined_Results.rtf"
 file open `rtf' using "`rtffile'", write replace
 file write `rtf' "{\rtf1\ansi" _n
 file write `rtf' "{\fonttbl{\f0 Times New Roman;}}" _n

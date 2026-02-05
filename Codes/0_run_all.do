@@ -17,10 +17,10 @@ global master_loc "~/Documents/GitHub/Ghana_Mn/Codes"
 global proc_dta_loc "../Processed Stata Dta" //<-- Relative file path, no need to change
 *global R_loc "C:/Program Files\R\R-4.5.2\bin\x64\Rscript.exe" //<-- Change if needed. Run file.path(R.home("bin"), "Rscript") in R to find yours.
 global R_loac "/opt/homebrew/bin/Rscript"
+global R_loc "C:/Program Files/R/R-4.5.2/bin/x64/Rscript.exe"
+global master_loc "C:/Users/liu.7133/Github_Repo/Ghana_Mn/Codes"
+cd "$master_loc" 
 capture mkdir "../Processed Stata Dta"
-
-cd "$master_loc"
-ls
 
 **Install any needed packages
 /* 
