@@ -6,8 +6,8 @@
 // capture frame create sachet
 // capture frame change sachet
 
- use "$cryptomator_loc\03_Sachet Water Sample\04_clean_data_pii\Sachet_water_pii_data.dta", clear
-append using "$cryptomator_loc\02_School Water Sample\04_clean_data_pii\School_water_pii_data.dta"
+ use "$cryptomator_loc/03_Sachet Water Sample/04_clean_data_pii/Sachet_water_pii_data.dta", clear
+append using "$cryptomator_loc/02_School Water Sample/04_clean_data_pii/School_water_pii_data.dta"
 
 drop if sachet_sample_id=="."
 gen sample_ID = sachet_sample_id
@@ -29,12 +29,12 @@ capture drop FDA_registered
 gen FDA_registered = 0
 replace FDA_registered = 1 if sample_ID == "306_07_01" //FDA: Fredericko Asan Ent., GPS WQ-0020-9272, Behind the District Assembly Complex, off Antobia Road, Juaboso, WN/R	Pure Naturale Ice Natural Mineral Water - LDPE Sachet (500ml)
 
-save "$cryptomator_loc\Processed\Sachet_Water_Brand_Manufacturer.dta", replace
+save "$cryptomator_loc/Processed/Sachet_Water_Brand_Manufacturer.dta", replace
 
 //merge back to the main data file
-use "$proc_dta_loc\Lab Test Results.dta", clear
+use "$proc_dta_loc/Lab Test Results.dta", clear
 capture drop _merge
-merge 1:1 sample_ID using "$cryptomator_loc\Processed\Sachet_Water_Brand_Manufacturer.dta"
+merge 1:1 sample_ID using "$cryptomator_loc/Processed/Sachet_Water_Brand_Manufacturer.dta"
 
 
 assert _merge !=2 //-->there will be some not matched but all of them are not sachet water
@@ -98,4 +98,4 @@ gen str20 lodlab = ""
 replace lodlab = "<LOD" if Mn==0
 
 drop sachet_brand_name sachet_manuf_name
-save "../Original Data\Sachet Test Results_Only.dta", replace
+save "../Original Data/Sachet Test Results_Only.dta", replace

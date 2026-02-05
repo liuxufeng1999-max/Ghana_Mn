@@ -5,7 +5,7 @@ cd "$master_loc"
 **# Sample ID Extraction
 
 	**# River
-use "$cryptomator_loc\04_River Water Sample\04_clean_data_pii\River_water_pii_data.dta", clear
+use "$cryptomator_loc/04_River Water Sample/04_clean_data_pii/River_water_pii_data.dta", clear
 
 **Access point ID & GPS
 preserve
@@ -90,7 +90,7 @@ tempfile river_sample_ID
 save `river_sample_ID'
 
 	**# School Water
-use "$cryptomator_loc\02_School Water Sample\04_clean_data_pii\School_water_pii_data.dta", clear
+use "$cryptomator_loc/02_School Water Sample/04_clean_data_pii/School_water_pii_data.dta", clear
 gen school_sample = 1
 gen school_sachet = 0
 preserve
@@ -125,7 +125,7 @@ save `school_sample_ID', replace
 
 
 	**# Household Water
-use "$cryptomator_loc\01_Household Water Sample\04_clean_data_pii\Household_water_pii_data.dta", clear
+use "$cryptomator_loc/01_Household Water Sample/04_clean_data_pii/Household_water_pii_data.dta", clear
 gen hh_sample = 1
 local id_var gps_employeelatitude gps_employeelongitude gps_employeealtitude gps_employeeaccuracy household_sample_id
 local name "GPS_lat GPS_long GPS_altit GPS_accuracy sample_ID"
@@ -144,7 +144,7 @@ save `HH_sample_ID', replace
 
 
 	**# Sachet Water
-use "$cryptomator_loc\03_Sachet Water Sample\04_clean_data_pii\Sachet_water_pii_data.dta", clear
+use "$cryptomator_loc/03_Sachet Water Sample/04_clean_data_pii/Sachet_water_pii_data.dta", clear
 gen vendor_sachet_sample = 1
 local id_var geo_samp_pointlatitude geo_samp_pointlongitude geo_samp_pointaltitude geo_samp_pointaccuracy sach_water_id
 local name "GPS_lat GPS_long GPS_altit GPS_accuracy sample_ID"
@@ -176,7 +176,7 @@ replace village_id = substr(sample_ID, 1, 3) if missing(village_id)
 
 save "../Original Data/Sample_ID_Log.dta", replace
 preserve
-	use "D:\Foundation First Pilot\02_Follow-up Survey\01_Parent Survey\04_clean_data_pii\FF_PARENT_EL_SURVEY_clean_pii_data.dta", clear
+	use "D:/Foundation First Pilot/02_Follow-up Survey/01_Parent Survey/04_clean_data_pii/FF_PARENT_EL_SURVEY_clean_pii_data.dta", clear
 	keep village new_village_id
 	duplicates drop
 	rename new_village_id village_id_BL

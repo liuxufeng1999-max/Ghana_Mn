@@ -1,5 +1,5 @@
 /* 4A. Evaluation Specific to Mn */
-use "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", clear
+use "../Processed Stata Dta/Test Results Merged with EL Child Development.dta", clear
 
 
 **# Primary Results: Y = f(Mn) + X + e
@@ -40,11 +40,11 @@ foreach var of varlist `outcome' {
 	local i = `i' + 1
 }
 
-esttab `model' using "..\Output\Tables\Table3_EPA_LOD_Mn_Exposure_ChildDev.rtf",  ///
+esttab `model' using "../Output/Tables/Table3_EPA_LOD_Mn_Exposure_ChildDev.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 		mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
-	coeflabel(2.Mn_LOD_EPA "Detected \ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
+	coeflabel(2.Mn_LOD_EPA "Detected /ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
 	replace nonote label
 
@@ -83,7 +83,7 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_Mn_addcov
 	local i = `i' + 1
 }
-esttab `model' using "..\Output\Tables\Table2_Continuous_Mn_Exposure_ChildDev.rtf",  ///
+esttab `model' using "../Output/Tables/Table2_Continuous_Mn_Exposure_ChildDev.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 	mtitle("Child Development Score" "Child Development Score" "Child Development Score") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2) ///
@@ -145,11 +145,11 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_z_Mn_school_addcov
 	local i = `i' + 1
 }
-esttab `model'  using "..\Output\Tables\TableS4_Mn_plus_SchoolExposure_ChildDev.rtf",  ///
+esttab `model'  using "../Output/Tables/TableS4_Mn_plus_SchoolExposure_ChildDev.rtf",  ///
     stats(Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 			mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2 *log_school_Mn_max_LODsq2 ) ///
-	coeflabel(log_Mn_LODsq2 "log(Household Mn)" log_school_Mn_max_LODsq2 "log(School Mn)" c.log_Mn_LODsq2#c.log_school_Mn_max_LODsq2 "log(Household Mn) \ensuremath{\times} log(School Mn)" ) replace nonote label noomitted
+	coeflabel(log_Mn_LODsq2 "log(Household Mn)" log_school_Mn_max_LODsq2 "log(School Mn)" c.log_Mn_LODsq2#c.log_school_Mn_max_LODsq2 "log(Household Mn) /ensuremath{/times} log(School Mn)" ) replace nonote label noomitted
 
 sum log_school_Mn_max_LODsq2 if e(sample), detail
 local sch_min  = r(p25)
@@ -172,10 +172,10 @@ marginsplot, ///
 	title("") ///
 	name(SchoolMn, replace)
 
-graph export "..\Output\Figures\Fig4_MarginsPlot_AME_by_SchoolMn.pdf", ///
+graph export "../Output/Figures/Fig4_MarginsPlot_AME_by_SchoolMn.pdf", ///
 	name(SchoolMn) as(pdf) replace
 
-graph export "..\Output\Figures\Fig4_MarginsPlot_AME_by_SchoolMn.svg", ///
+graph export "../Output/Figures/Fig4_MarginsPlot_AME_by_SchoolMn.svg", ///
 	name(SchoolMn) as(svg) replace
 **# Heterogeneity: Male vs. Female
 
@@ -212,12 +212,12 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_z_Mn_Male_addcov
 	local i = `i' + 1
 }
-esttab `model' using "..\Output\Tables\TableS5_Mn_ChildDev_by_BoysGirls.rtf",  ///
+esttab `model' using "../Output/Tables/TableS5_Mn_ChildDev_by_BoysGirls.rtf",  ///
     stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
 			mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
     b ci star(* 0.1 ** 0.05 *** 0.01) keep(*.child_male_BL *log_Mn_LODsq2) ///
 	refcat(log_Mn_LODsq2 "Girls (ref.)", nolabel) ///
-	coeflabel(1.child_male_BL#c.log_Mn_LODsq2 "Boys \ensuremath{\times} log(Household Mn)") ///
+	coeflabel(1.child_male_BL#c.log_Mn_LODsq2 "Boys /ensuremath{/times} log(Household Mn)") ///
 	replace nonote label noomitted nobase
 
 margins, dydx(log_Mn_LODsq2) vce(unconditional)
@@ -255,7 +255,7 @@ local cov "age_chld_months_EL child_male "
 local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 quietly reg z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add' , vce(cluster caregiver_id_BL)
 /* cd "$master_loc"
-cd "..\Output\Tables\" */
+cd "../Output/Tables/" */
 sensemakr ///
 	z_irt_all_30_48m  Mn_LOD_EPA2 Mn_LOD_EPA3 `cov_always' `cov' `cov_add', ///
 	treat(Mn_LOD_EPA3) alpha(0.1) ///
@@ -282,7 +282,7 @@ local cov "age_chld_months_EL child_male "
 local cov_add "hh_learn_mca1 par_involv_mca1 own_house_BL own_land_BL nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k"
 quietly reg z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add' , vce(cluster caregiver_id_BL)
 /* cd "$master_loc"
-cd "..\Output\Tables\" */
+cd "../Output/Tables/" */
 sensemakr ///
 	z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add', ///
 	treat(log_Mn_LODsq2) alpha(0.1) ///
@@ -291,7 +291,7 @@ sensemakr ///
 graph copy s_extremeplot logMn_extreme, replace
 grc1leg Mn_EPA_extreme	logMn_extreme, name(sensemakr_EPA_Log_Extreme, replace) xcommon
 graph export ///
-	"..\Output\Figures\FigS2_Sensemakr_ExtremePlot_logEPA_Combined.svg", ///
+	"../Output/Figures/FigS2_Sensemakr_ExtremePlot_logEPA_Combined.svg", ///
 	as(svg) name(sensemakr_EPA_Log_Extreme) replace
 // graph copy s_countourplot Mn_log_countour, replace
 
@@ -309,43 +309,43 @@ cd "$master_loc"
 
 * Export combined sensemakr table as RTF
 tempname rtf
-local rtffile "..\Output\Tables\Table4_Sensemakr_Combined_Results.rtf"
+local rtffile "../Output/Tables/Table4_Sensemakr_Combined_Results.rtf"
 file open `rtf' using "`rtffile'", write replace
-file write `rtf' "{\rtf1\ansi" _n
-file write `rtf' "{\fonttbl{\f0 Times New Roman;}}" _n
-file write `rtf' "\f0\fs20" _n
+file write `rtf' "{/rtf1/ansi" _n
+file write `rtf' "{/fonttbl{/f0 Times New Roman;}}" _n
+file write `rtf' "/f0/fs20" _n
 
 * Table header
-file write `rtf' "\trowd\trgaph108" _n
-file write `rtf' "\cellx1800\cellx3000\cellx4200\cellx5600\cellx6800\cellx8200\cellx9600\cellx11000" _n
-file write `rtf' "\b Treatment (D)\cell Estimate\cell Standard Error\cell R{\super 2}{\sub Y~D|X} (%)\cell RV (%)\cell RV{\sub \u945?=0.1} (%)\cell R{\super 2}{\sub Y~Z|D,X} (%)\cell R{\super 2}{\sub D~Z|X} (%)\cell\b0" _n
-file write `rtf' "\row" _n
+file write `rtf' "/trowd/trgaph108" _n
+file write `rtf' "/cellx1800/cellx3000/cellx4200/cellx5600/cellx6800/cellx8200/cellx9600/cellx11000" _n
+file write `rtf' "/b Treatment (D)/cell Estimate/cell Standard Error/cell R{/super 2}{/sub Y~D|X} (%)/cell RV (%)/cell RV{/sub /u945?=0.1} (%)/cell R{/super 2}{/sub Y~Z|D,X} (%)/cell R{/super 2}{/sub D~Z|X} (%)/cell/b0" _n
+file write `rtf' "/row" _n
 
 * Row 1: log(Mn)
-file write `rtf' "\trowd\trgaph108" _n
-file write `rtf' "\cellx1800\cellx3000\cellx4200\cellx5600\cellx6800\cellx8200\cellx9600\cellx11000" _n
-file write `rtf' "`log_treat_label'\cell " ///
-	%6.3f (`log_coef') "\cell " ///
-	%6.3f (`log_se') "\cell " ///
-	%6.2f (`log_r2ydx') "\cell " ///
-	%6.2f (`log_rv_q') "\cell " ///
-	%6.2f (`log_rv_qa') "\cell " ///
-	%6.2f (`log_r2yzdx') "\cell " ///
-	%6.2f (`log_r2dzx') "\cell" _n
-file write `rtf' "\row" _n
+file write `rtf' "/trowd/trgaph108" _n
+file write `rtf' "/cellx1800/cellx3000/cellx4200/cellx5600/cellx6800/cellx8200/cellx9600/cellx11000" _n
+file write `rtf' "`log_treat_label'/cell " ///
+	%6.3f (`log_coef') "/cell " ///
+	%6.3f (`log_se') "/cell " ///
+	%6.2f (`log_r2ydx') "/cell " ///
+	%6.2f (`log_rv_q') "/cell " ///
+	%6.2f (`log_rv_qa') "/cell " ///
+	%6.2f (`log_r2yzdx') "/cell " ///
+	%6.2f (`log_r2dzx') "/cell" _n
+file write `rtf' "/row" _n
 
 * Row 2: 1{Mn>=50}
-file write `rtf' "\trowd\trgaph108" _n
-file write `rtf' "\cellx1800\cellx3000\cellx4200\cellx5600\cellx6800\cellx8200\cellx9600\cellx11000" _n
-file write `rtf' "`epa_treat_label'\cell " ///
-	%6.3f (`epa_coef') "\cell " ///
-	%6.3f (`epa_se') "\cell " ///
-	%6.2f (`epa_r2ydx') "\cell " ///
-	%6.2f (`epa_rv_q') "\cell " ///
-	%6.2f (`epa_rv_qa') "\cell " ///
-	%6.2f (`epa_r2yzdx') "\cell " ///
-	%6.2f (`epa_r2dzx') "\cell" _n
-file write `rtf' "\row" _n
+file write `rtf' "/trowd/trgaph108" _n
+file write `rtf' "/cellx1800/cellx3000/cellx4200/cellx5600/cellx6800/cellx8200/cellx9600/cellx11000" _n
+file write `rtf' "`epa_treat_label'/cell " ///
+	%6.3f (`epa_coef') "/cell " ///
+	%6.3f (`epa_se') "/cell " ///
+	%6.2f (`epa_r2ydx') "/cell " ///
+	%6.2f (`epa_rv_q') "/cell " ///
+	%6.2f (`epa_rv_qa') "/cell " ///
+	%6.2f (`epa_r2yzdx') "/cell " ///
+	%6.2f (`epa_r2dzx') "/cell" _n
+file write `rtf' "/row" _n
 
 file write `rtf' "}" _n
 file close `rtf'
@@ -386,10 +386,10 @@ foreach var of local nonMn {
 	local i = `i' + 1
 }
 
-esttab `model' /* using "..\Output\Tables\RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
+esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
     stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
    b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
-	coeflabel(2.Mn_LOD_EPA "Detected \ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
+	coeflabel(2.Mn_LOD_EPA "Detected /ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
 	replace nonote label noomitted nobase
 
@@ -416,7 +416,7 @@ coefplot ///
 	title("{bf: B}. Coefficient on {bf: 1}(Household Mn > USEPA)") ///
 	name(coefplot_rHHnonMn, replace)
 
-// graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_AboveUSEPA.pdf", ///
+// graph export "../Output/Figures/RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_AboveUSEPA.pdf", ///
 // 	as(pdf) name(coefplot_rHHnonMn) replace
 
 //====log(Mn) Specification===//
@@ -438,7 +438,7 @@ foreach var of local nonMn {
 		local model `model' `title'_logMn_rHH`est_tit'
 	local i = `i' + 1
 }
-esttab `model' /* using "..\Output\Tables\RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
+esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
     stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
    b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2) ///
 	coeflabel(log_Mn_LODsq2 "log(Household Mn)") ///
@@ -467,7 +467,7 @@ coefplot ///
 	title("{bf: A}. Coefficient on log(Household Mn)") ///
 	name(coefplot_rHHnonMn_log, replace)
 
-// graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMn.pdf", ///
+// graph export "../Output/Figures/RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMn.pdf", ///
 // 	as(pdf) name(coefplot_rHHnonMn_log) replace
 
 graph combine ///
@@ -476,10 +476,10 @@ graph combine ///
 
 cd "$master_loc"
 graph export ///
-	"..\Output\Figures\Fig5_RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.pdf", ///
+	"../Output/Figures/Fig5_RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.pdf", ///
 	as(pdf) name(coefplot_rHHnonMn) replace
 graph export ///
-	"..\Output\Figures\Fig5_RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.svg", ///
+	"../Output/Figures/Fig5_RobustnessChecks_RemoveNonMn_HouseholdWater_Coefplot_logMnUSEPA.svg", ///
 	as(svg) name(coefplot_rHHnonMn) replace
 
 **remove HH and School contaminated metal
@@ -508,10 +508,10 @@ reg z_irt_all_30_48m  i.Mn_LOD_EPA `cov_always' `cov' `cov_add' if School_nonMn_
 		est store `title'_MnEPA_rHHSchAll
 		local model `model' `title'_MnEPA_rHHSchAll
 
-esttab `model' /* using "..\Output\Tables\RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
+esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
     stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
    b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
-	coeflabel(2.Mn_LOD_EPA "Detected \ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
+	coeflabel(2.Mn_LOD_EPA "Detected /ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
 	replace nonote label noomitted nobase
 
@@ -538,7 +538,7 @@ coefplot ///
 	title("{bf: B}. Coefficient on {bf: 1}(Household Mn > USEPA)") ///
 	name(coefplot_rHHSchnonMn_EPA, replace)
 
-// graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_AboveUSEPA.pdf", ///
+// graph export "../Output/Figures/RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_AboveUSEPA.pdf", ///
 // 	as(pdf) name(coefplot_rHHSchnonMn) replace
 
 //====log(Mn) Specification===//
@@ -562,7 +562,7 @@ reg z_irt_all_30_48m  log_Mn_LODsq2 `cov_always' `cov' `cov_add' if School_nonMn
 		quietly estadd local Cov_add = "Yes"
 		est store `title'_logMn_rHHSchAll
 		local model `model' `title'_logMn_rHHSchAll
-esttab `model' /* using "..\Output\Tables\RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
+esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
     stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
    b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2) ///
 	coeflabel(log_Mn_LODsq2 "log(Household Mn)") ///
@@ -591,7 +591,7 @@ coefplot ///
 	title("{bf: A}. Coefficient on log(Household Mn)") ///
 	name(coefplot_rHHSchnonMn_log, replace)
 
-// graph export "..\Output\Figures\RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMn.pdf", ///
+// graph export "../Output/Figures/RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMn.pdf", ///
 // 	as(pdf) name(coefplot_rHHSchnonMn_log) replace
 
 graph combine ///
@@ -599,10 +599,10 @@ graph combine ///
 	row(1) name(coefplot_rHHSchnonMn, replace)
 
 cd "$master_loc"
-graph export "..\Output\Figures\FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.pdf", ///
+graph export "../Output/Figures/FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.pdf", ///
 	as(pdf) name(coefplot_rHHSchnonMn) replace
 
-graph export "..\Output\Figures\FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.svg", ///
+graph export "../Output/Figures/FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.svg", ///
 	as(svg) name(coefplot_rHHSchnonMn) replace
 
-save "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", replace
+save "../Processed Stata Dta/Test Results Merged with EL Child Development.dta", replace

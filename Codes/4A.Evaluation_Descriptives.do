@@ -1,5 +1,5 @@
 /* 4.Evaluation of Results */
-use "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", clear
+use "../Processed Stata Dta/Test Results Merged with EL Child Development.dta", clear
 
 **# some further processing
 tab sample_water_source, gen( sample_water_source_)
@@ -46,11 +46,11 @@ label values Mn_above_LOD Mn_aboveLOD
 label var Mn_above_LOD "HH Water Mn Above LOD"
 
 egen Mn_LOD_EPA = group(Mn_above_LOD any_limit_Mn_higher), label
-label define Mn_aboveLOD_EPA 1 "Mn Below LOD" 2 "Detected \ensuremath{<} Threshold" 3 "Above USEPA" , replace
+label define Mn_aboveLOD_EPA 1 "Mn Below LOD" 2 "Detected /ensuremath{<} Threshold" 3 "Above USEPA" , replace
 label values Mn_LOD_EPA Mn_aboveLOD_EPA
 
 egen Mn_LOD_WHO = group(Mn_above_LOD WHO_Mn_higher), label
-label define Mn_aboveLOD_WHO 1 "Mn Below LOD" 2 "Detected \ensuremath{<} Threshold" 3 "Above WHO" , replace
+label define Mn_aboveLOD_WHO 1 "Mn Below LOD" 2 "Detected /ensuremath{<} Threshold" 3 "Above WHO" , replace
 label values Mn_LOD_WHO Mn_aboveLOD_WHO
 
 gen school_Mn_max_LOD_EPA = 0 if school_Mn_max ==0
@@ -126,9 +126,9 @@ twoway ///
 	(kdensity z_irt_all_30_48m if Mn_above_LOD == 1 ), ///
 	legend(pos(6) col(2) order(1 "Mn below LOD" 2 "Mn detected")) ///
 	xtitle("Standardized Child Development Score") ytitle("") name(z_irt_Mn, replace)
-graph export "..\Output\Figures\FigS1_kdensity_z_Score_and_Mn_Limits.pdf", ///
+graph export "../Output/Figures/FigS1_kdensity_z_Score_and_Mn_Limits.pdf", ///
 	name(z_irt_Mn) as(pdf) replace
-graph export "..\Output\Figures\FigS1_kdensity_z_Score_and_Mn_Limits.svg", ///
+graph export "../Output/Figures/FigS1_kdensity_z_Score_and_Mn_Limits.svg", ///
 	name(z_irt_Mn) as(svg) replace
 
 
@@ -140,12 +140,12 @@ iebaltab `chld_cov', ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savecsv("..\Output\Tables\Balance_Table\TableS1_iebaltab_Mn_above_LOD_ChildCov.csv") replace
+                          savecsv("../Output/Tables/Balance_Table/TableS1_iebaltab_Mn_above_LOD_ChildCov.csv") replace
 
 * Replace (SD) with [SD] to prevent Excel from interpreting (numbers) as negative
 tempname fh fw
-local csvfile "..\Output\Tables\Balance_Table\TableS1_iebaltab_Mn_above_LOD_ChildCov.csv"
-local csvtemp "..\Output\Tables\Balance_Table\TableS1_iebaltab_Mn_above_LOD_ChildCov_temp.csv"
+local csvfile "../Output/Tables/Balance_Table/TableS1_iebaltab_Mn_above_LOD_ChildCov.csv"
+local csvtemp "../Output/Tables/Balance_Table/TableS1_iebaltab_Mn_above_LOD_ChildCov_temp.csv"
 file open `fh' using "`csvfile'", read text
 file open `fw' using "`csvtemp'", write text
 file read `fh' line
@@ -164,7 +164,7 @@ erase "`csvtemp'"
 //  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
 //                          vce(cluster caregiver_id_BL_num) ///
 //                           fix(dist_code) ///
-//                           savecsv("$master_loc\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_ChildCov.csv") replace
+//                           savecsv("$master_loc/Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_ChildCov.csv") replace
 
 capture destring num_chld_hsehld_17, replace
 local caregiver_cov "prim_caregiver_female_BL age_BL nature_employ_unemp nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL school_respondent_BL"
@@ -173,14 +173,14 @@ iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savecsv("..\Output\Tables\Balance_Table\TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
+                          savecsv("../Output/Tables/Balance_Table/TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
 // iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
 //  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
 //                          vce(cluster caregiver_id_BL_num) ///
 //                           fix(dist_code) ///
-//                           savecsv("$master_loc\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
-local csvfile "..\Output\Tables\Balance_Table\TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv"
-local csvtemp "..\Output\Tables\Balance_Table\TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar_temp.csv"
+//                           savecsv("$master_loc/Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
+local csvfile "../Output/Tables/Balance_Table/TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv"
+local csvtemp "../Output/Tables/Balance_Table/TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar_temp.csv"
 file open `fh' using "`csvfile'", read text
 file open `fw' using "`csvtemp'", write text
 file read `fh' line
@@ -200,7 +200,7 @@ erase "`csvtemp'"
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savetex("..\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_CaregiverCov.tex") replace
+                          savetex("../Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_CaregiverCov.tex") replace
 
 // local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld num_chld_hsehld_17 own_house_BL own_land_BL annual_income_geq5k_BL"
 local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld num_chld_hsehld_17 own_house_BL own_land_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k recall_income_bel5k"
@@ -208,7 +208,7 @@ iebaltab `hh_cov'  if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savetex("$master_loc\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_HouseholdCov.tex") replace */
+                          savetex("$master_loc/Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_HouseholdCov.tex") replace */
 
 gen treat_drink_water_boil = means_treat_cook_1 == 1
 gen treat_drink_water_alum = means_treat_cook_2 == 1
@@ -225,9 +225,9 @@ iebaltab `water_practices'  if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest  ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-						  savecsv("..\Output\Tables\Balance_Table\TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv") replace
-local csvfile "..\Output\Tables\Balance_Table\TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv"
-local csvtemp "..\Output\Tables\Balance_Table\TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method_temp.csv"
+						  savecsv("../Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv") replace
+local csvfile "../Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv"
+local csvtemp "../Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method_temp.csv"
 file open `fh' using "`csvfile'", read text
 file open `fw' using "`csvtemp'", write text
 file read `fh' line
@@ -246,6 +246,6 @@ erase "`csvtemp'"
 //  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
 //                          vce(cluster caregiver_id_BL_num) ///
 //                           fix(dist_code) ///
-//                           savexlsx("$master_loc\Output\Tables\Balance_Table\iebaltab_Mn_above_LOD_WaterSafetyTreatment.xlsx") replace
+//                           savexlsx("$master_loc/Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_WaterSafetyTreatment.xlsx") replace
 
-save "..\Processed Stata Dta\Test Results Merged with EL Child Development.dta", replace
+save "../Processed Stata Dta/Test Results Merged with EL Child Development.dta", replace

@@ -1,6 +1,6 @@
 /* Sachet Water Specifics */
 
-use "../Original Data\Sachet Test Results_Only.dta", clear
+use "../Original Data/Sachet Test Results_Only.dta", clear
 twoway ///
     (bar Mn_plot x if FDA_registered==0, color(gs12)) ///
     (bar Mn_plot x if FDA_registered==1, color(navy)) ///
@@ -13,8 +13,8 @@ twoway ///
     ytitle("Mn concentration ({&mu}g/L)") ///
 	name(Sachet_Mn, replace)
 
-graph export "..\Output\Figures\Fig3_Sachet_Mn_Concentration_FDARegistration.pdf", ///
+graph export "../Output/Figures/Fig3_Sachet_Mn_Concentration_FDARegistration.pdf", ///
 	as(pdf) name(Sachet_Mn) replace
-graph export "..\Output\Figures\Fig3_Sachet_Mn_Concentration_FDARegistration.svg", ///
+graph export "../Output/Figures/Fig3_Sachet_Mn_Concentration_FDARegistration.svg", ///
 	as(svg) name(Sachet_Mn) replace
 

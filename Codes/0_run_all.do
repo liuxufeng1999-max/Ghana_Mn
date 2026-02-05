@@ -11,17 +11,20 @@ Required: Stata 14 or higher AND R 4.1 or higher
 **# Specify some do file locations
 **Note: we will use relative file path (relative to this master do file location)
 
-global master_loc "C:\Users\liu.7133\Github_Repo\Ghana_Mn\Codes" //<-- Change if needed
+*global master_loc "C:\Users\liu.7133\Github_Repo\Ghana_Mn\Codes" //<-- Change if needed
 /* global cryptomator_loc "" //<-- Change if needed * NOT USED IN THIS REPRODUCTION PACKAKGE */
-global proc_dta_loc "..\Processed Stata Dta" //<-- Relative file path, no need to change
-global R_loc "C:\Program Files\R\R-4.5.2\bin\x64\Rscript.exe" //<-- Change if needed. Run file.path(R.home("bin"), "Rscript") in R to find yours.
-capture mkdir "..\Processed Stata Dta"
+global master_loc "~/Documents/GitHub/Ghana_Mn/Codes"
+global proc_dta_loc "../Processed Stata Dta" //<-- Relative file path, no need to change
+*global R_loc "C:/Program Files\R\R-4.5.2\bin\x64\Rscript.exe" //<-- Change if needed. Run file.path(R.home("bin"), "Rscript") in R to find yours.
+global R_loac "/opt/homebrew/bin/Rscript"
+capture mkdir "../Processed Stata Dta"
 
 cd "$master_loc"
 ls
 
 **Install any needed packages
-/* ssc install estout      // esttab, eststo, estadd
+/* 
+ssc install estout      // esttab, eststo, estadd
 ssc install grc1leg     // graph combine with shared legend
 ssc install mca         // multiple correspondence analysis
 ssc install iebaltab    // balance tables (World Bank ietoolkit)
@@ -53,7 +56,7 @@ shell "$R_loc" "3B.Sample_Map.R"
 **Some pre-processings and descriptive statistics
 **Descriptives: Kdensity Plots + Balance Tables
 cd "$master_loc"
-do 4A.Evaluation_Descriptive.do
+do 4A.Evaluation_Descriptives.do
 
 
 **# Evaluation: Quantitative Analysis

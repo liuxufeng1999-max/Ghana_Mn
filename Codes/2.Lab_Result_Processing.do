@@ -391,24 +391,8 @@ restore
 keep if hh_sample_yn == 1
 
 rename HH_full_ID caregiver_id_EL
-merge 1:m caregiver_id_EL using "..\Original Data\Parent_Survey_isid_ChildCode.dta", ///
-	keepusing( ///
-		enumerator_id caregiver_id sch_id new_village_id cgver_id_el child_code focal_child_yn child_male child_male_BL age_chld_months_EL ///
-		theta_all_30_48m theta_motor_30_48m theta_language_30_48m theta_socio_30_48m theta_cognitive_30_48m theta_adaptive_30_48m ///
-		caregiver_id_BL prim_caregiver_female_BL age_BL ///
-		nature_employ_unemp nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL ///
-		high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL ///
-		num_pple_hsehld num_chld_hsehld_17 num_chld_hsehld_5 ///
-		own_house_BL own_land_BL own_othr_hse_BL own_agric_land_BL ///
-		hme_made_toys_yn_BL toys_shop_yn_BL hsehld_objts_yn_BL objts_ousdie_yn_BL draw_write_materials_yn_BL puzzle_yn_BL ///
-		stories_yn stories_yn_BL counted_yn counted_yn_BL played_yn played_yn_BL taken_chld_work_yn taken_chld_work_yn_BL ///
-		who_engage_acti_mother_BL who_engage_acti_father_BL who_engage_acti_AnoRel_BL ///
-		annual_income_geq5k_BL lyear_income_leq5k lyear_income_geq10k lyear_income_geq15k lyear_income_geq20k ///
-		main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL ///
-		school_respondent_BL lost_in_EL dist_code treatment sch_id ///
-		main_drink_wtr_safe treat_drink_water_yn means_treat_cook_1 means_treat_cook_2 means_treat_cook_3 means_treat_cook_4 ///
-		switch_drink_wtr_dry main_drink_wtr_dry_safe ///
-	) gen(merge_caregiver)
+merge 1:m caregiver_id_EL using "../Original Data/Parent_Survey_isid_ChildCode.dta", ///
+ gen(merge_caregiver)
 drop if lost_in_EL!=0
 merge m:1 new_village_id using `river_test', gen(merge_river)
 distinct new_village_id if merge_river==1
