@@ -309,43 +309,43 @@ cd "$master_loc"
 
 * Export combined sensemakr table as RTF
 tempname rtf
-local rtffile "../Output/Tables/Table4_Sensemakr_Combined_Results.rtf"
+local rtffile "..\Output\Tables\Table4_Sensemakr_Combined_Results.rtf"
 file open `rtf' using "`rtffile'", write replace
-file write `rtf' "{/rtf1/ansi" _n
-file write `rtf' "{/fonttbl{/f0 Times New Roman;}}" _n
-file write `rtf' "/f0/fs20" _n
+file write `rtf' "{\rtf1\ansi" _n
+file write `rtf' "{\fonttbl{\f0 Times New Roman;}}" _n
+file write `rtf' "\f0\fs20" _n
 
 * Table header
-file write `rtf' "/trowd/trgaph108" _n
-file write `rtf' "/cellx1800/cellx3000/cellx4200/cellx5600/cellx6800/cellx8200/cellx9600/cellx11000" _n
-file write `rtf' "/b Treatment (D)/cell Estimate/cell Standard Error/cell R{/super 2}{/sub Y~D|X} (%)/cell RV (%)/cell RV{/sub /u945?=0.1} (%)/cell R{/super 2}{/sub Y~Z|D,X} (%)/cell R{/super 2}{/sub D~Z|X} (%)/cell/b0" _n
-file write `rtf' "/row" _n
+file write `rtf' "\trowd\trgaph108" _n
+file write `rtf' "\cellx1800\cellx3000\cellx4200\cellx5600\cellx6800\cellx8200\cellx9600\cellx11000" _n
+file write `rtf' "\b Treatment (D)\cell Estimate\cell Standard Error\cell R{\super 2}{\sub Y~D|X} (%)\cell RV (%)\cell RV{\sub \u945?=0.1} (%)\cell R{\super 2}{\sub Y~Z|D,X} (%)\cell R{\super 2}{\sub D~Z|X} (%)\cell\b0" _n
+file write `rtf' "\row" _n
 
 * Row 1: log(Mn)
-file write `rtf' "/trowd/trgaph108" _n
-file write `rtf' "/cellx1800/cellx3000/cellx4200/cellx5600/cellx6800/cellx8200/cellx9600/cellx11000" _n
-file write `rtf' "`log_treat_label'/cell " ///
-	%6.3f (`log_coef') "/cell " ///
-	%6.3f (`log_se') "/cell " ///
-	%6.2f (`log_r2ydx') "/cell " ///
-	%6.2f (`log_rv_q') "/cell " ///
-	%6.2f (`log_rv_qa') "/cell " ///
-	%6.2f (`log_r2yzdx') "/cell " ///
-	%6.2f (`log_r2dzx') "/cell" _n
-file write `rtf' "/row" _n
+file write `rtf' "\trowd\trgaph108" _n
+file write `rtf' "\cellx1800\cellx3000\cellx4200\cellx5600\cellx6800\cellx8200\cellx9600\cellx11000" _n
+file write `rtf' "`log_treat_label'\cell " \\\
+	%6.3f (`log_coef') "\cell " \\\
+	%6.3f (`log_se') "\cell " \\\
+	%6.2f (`log_r2ydx') "\cell " \\\
+	%6.2f (`log_rv_q') "\cell " \\\
+	%6.2f (`log_rv_qa') "\cell " \\\
+	%6.2f (`log_r2yzdx') "\cell " \\\
+	%6.2f (`log_r2dzx') "\cell" _n
+file write `rtf' "\row" _n
 
 * Row 2: 1{Mn>=50}
-file write `rtf' "/trowd/trgaph108" _n
-file write `rtf' "/cellx1800/cellx3000/cellx4200/cellx5600/cellx6800/cellx8200/cellx9600/cellx11000" _n
-file write `rtf' "`epa_treat_label'/cell " ///
-	%6.3f (`epa_coef') "/cell " ///
-	%6.3f (`epa_se') "/cell " ///
-	%6.2f (`epa_r2ydx') "/cell " ///
-	%6.2f (`epa_rv_q') "/cell " ///
-	%6.2f (`epa_rv_qa') "/cell " ///
-	%6.2f (`epa_r2yzdx') "/cell " ///
-	%6.2f (`epa_r2dzx') "/cell" _n
-file write `rtf' "/row" _n
+file write `rtf' "\trowd\trgaph108" _n
+file write `rtf' "\cellx1800\cellx3000\cellx4200\cellx5600\cellx6800\cellx8200\cellx9600\cellx11000" _n
+file write `rtf' "`epa_treat_label'\cell " \\\
+	%6.3f (`epa_coef') "\cell " \\\
+	%6.3f (`epa_se') "\cell " \\\
+	%6.2f (`epa_r2ydx') "\cell " \\\
+	%6.2f (`epa_rv_q') "\cell " \\\
+	%6.2f (`epa_rv_qa') "\cell " \\\
+	%6.2f (`epa_r2yzdx') "\cell " \\\
+	%6.2f (`epa_r2dzx') "\cell" _n
+file write `rtf' "\row" _n
 
 file write `rtf' "}" _n
 file close `rtf'
@@ -389,7 +389,7 @@ foreach var of local nonMn {
 esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
     stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
    b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
-	coeflabel(2.Mn_LOD_EPA "Detected /ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
+	coeflabel(2.Mn_LOD_EPA "Detected \ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
 	replace nonote label noomitted nobase
 
@@ -511,7 +511,7 @@ reg z_irt_all_30_48m  i.Mn_LOD_EPA `cov_always' `cov' `cov_add' if School_nonMn_
 esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPAsec.tex" */,  ///
     stats( Cov Cov_add N r2_p, labels( "Demographic Controls" "Economic Controls" "N (Children)" "Pseudo R-squared")) ///
    b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
-	coeflabel(2.Mn_LOD_EPA "Detected /ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
+	coeflabel(2.Mn_LOD_EPA "Detected \ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
 	replace nonote label noomitted nobase
 

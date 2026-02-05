@@ -46,11 +46,11 @@ label values Mn_above_LOD Mn_aboveLOD
 label var Mn_above_LOD "HH Water Mn Above LOD"
 
 egen Mn_LOD_EPA = group(Mn_above_LOD any_limit_Mn_higher), label
-label define Mn_aboveLOD_EPA 1 "Mn Below LOD" 2 "Detected /ensuremath{<} Threshold" 3 "Above USEPA" , replace
+label define Mn_aboveLOD_EPA 1 "Mn Below LOD" 2 "Detected \ensuremath{<} Threshold" 3 "Above USEPA" , replace
 label values Mn_LOD_EPA Mn_aboveLOD_EPA
 
 egen Mn_LOD_WHO = group(Mn_above_LOD WHO_Mn_higher), label
-label define Mn_aboveLOD_WHO 1 "Mn Below LOD" 2 "Detected /ensuremath{<} Threshold" 3 "Above WHO" , replace
+label define Mn_aboveLOD_WHO 1 "Mn Below LOD" 2 "Detected \ensuremath{<} Threshold" 3 "Above WHO" , replace
 label values Mn_LOD_WHO Mn_aboveLOD_WHO
 
 gen school_Mn_max_LOD_EPA = 0 if school_Mn_max ==0
