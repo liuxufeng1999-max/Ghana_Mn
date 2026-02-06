@@ -3,6 +3,38 @@ Ghana Mn and Child Development
 
 ## Replication Package
 
+### Repository Structure
+
+```
+Ghana_Mn/
+├── Codes/
+│   ├── 0_run_all.do
+│   ├── 1.Sample_ID_Extraction.do
+│   ├── 2.Lab_Result_Processing.do
+│   ├── 3A1.Sachet_Water_Processing.do
+│   ├── 3A2.Sachet_Specifics.do
+│   ├── 3A3.Sachet_Registry_Checks.R
+│   ├── 3B.Sample_Map.R
+│   ├── 4A.Evaluation_Descriptives.do
+│   └── 4B.Evaluation_Quantiative.do
+├── Original Data/
+│   ├── Spatial/
+│   │   ├── DHSBoundaries.zip          ← unzip before running (see Setup below)
+│   │   └── GEE_HydroShed_River.zip    ← unzip before running (see Setup below)
+│   ├── 100925_MetalsData_GhanaWaterSampling_xfl - 10102025..xlsx
+│   ├── Ghana_FDA_Product_Registry_12312025.xlsx
+│   ├── Parent_Survey_isid_ChildCode.dta
+│   ├── Sachet Test Results_Only.dta
+│   └── Sample_ID_Log.dta
+├── Output/
+│   ├── Figures/
+│   └── Tables/
+├── Processed Stata Dta/
+└── README.md
+```
+
+### Getting Started
+
 All Stata do-files are executed sequentially via `Codes/0_run_all.do`. Before running, update the path globals at the top of `0_run_all.do`:
 
 - `master_loc` — path to the `Codes/` directory in this repository.
@@ -10,7 +42,7 @@ All Stata do-files are executed sequentially via `Codes/0_run_all.do`. Before ru
 
 ### Setup: Spatial Data
 
-Before running the code, unzip the two zip files in `Original Data/Spatial_Github/` and save the extracted folders into `Original Data/Spatial/`:
+Before running the code, unzip the two zip files in `Original Data/Spatial/`:
 
 - `DHSBoundaries.zip` → extract into `Original Data/Spatial/DHSBoundaries/`
 - `GEE_HydroShed_River.zip` → extract into `Original Data/Spatial/GEE_HydroShed_River/`
