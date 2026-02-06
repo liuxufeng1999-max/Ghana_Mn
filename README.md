@@ -10,10 +10,10 @@ All Stata do-files are executed sequentially via `Codes/0_run_all.do`. Before ru
 
 ### Setup: Spatial Data
 
-Before running the code, unzip the two zip files in `Original Data/Spatial_Github/`:
+Before running the code, unzip the two zip files in `Original Data/Spatial_Github/` and save the extracted folders into `Original Data/Spatial/`:
 
-- `DHSBoundaries.zip` → extract into `Original Data/Spatial_Github/DHSBoundaries/`
-- `GEE_HydroShed_River.zip` → extract into `Original Data/Spatial_Github/GEE_HydroShed_River/`
+- `DHSBoundaries.zip` → extract into `Original Data/Spatial/DHSBoundaries/`
+- `GEE_HydroShed_River.zip` → extract into `Original Data/Spatial/GEE_HydroShed_River/`
 
 Retain the same folder names as the zip files.
 
