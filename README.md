@@ -3,10 +3,19 @@ Ghana Mn and Child Development
 
 ## Replication Package
 
-All Stata do-files are executed sequentially via `Codes/MASTER.do`. Before running, update the path globals at the top of `MASTER.do`:
+All Stata do-files are executed sequentially via `Codes/0_run_all.do`. Before running, update the path globals at the top of `0_run_all.do`:
 
 - `master_loc` — path to the `Codes/` directory in this repository.
 - `R_loc` — path to your `Rscript` executable. To find yours, run `file.path(R.home("bin"), "Rscript")` in R, or use `where Rscript` (Windows) / `which Rscript` (macOS/Linux) from the command line.
+
+### Setup: Spatial Data
+
+Before running the code, unzip the two zip files in `Original Data/Spatial_Github/`:
+
+- `DHSBoundaries.zip` → extract into `Original Data/Spatial_Github/DHSBoundaries/`
+- `GEE_HydroShed_River.zip` → extract into `Original Data/Spatial_Github/GEE_HydroShed_River/`
+
+Retain the same folder names as the zip files.
 
 ### Software Requirements
 
@@ -21,7 +30,7 @@ ssc install coefplot    // coefficient plots
 ssc install sensemakr   // sensitivity analysis (Cinelli & Hazlett)
 ```
 
-**R 4.1 or higher** — Used only for `3B.Sample_Map.R` (called from `MASTER.do` via Rscript). The following CRAN packages are required:
+**R 4.1 or higher** — Used only for `3B.Sample_Map.R` (called from `0_run_all.do` via Rscript). The following CRAN packages are required:
 
 `sf`, `ggplot2`, `dplyr`, `patchwork`, `cowplot`, `rnaturalearth`, `rnaturalearthdata`, `geosphere`, `ggspatial`, `igraph`, `FNN`, `sfnetworks`, `viridis`, `scico`, `svglite`, `rstudioapi`
 
@@ -35,12 +44,12 @@ Some scripts in the pipeline read **personally identifiable information (PII)** 
 
 | # | Script | Description |
 |---|--------|-------------|
-| 0 | `MASTER.do` | Sets global paths and runs all scripts in order. |
+| 0 | `0_run_all.do` | Sets global paths and runs all scripts in order. |
 | 1 | `1.Sample_ID_Extraction.do` | Builds the master Sample ID Log (see details below). |
 | 2 | `2.Lab_Result_Processing.do` | Reads lab results, creates WHO/EPA threshold indicators, and merges with child-level data from the FF-Pilot. |
 | 3A1 | `3A1.Sachet_Water_Processing.do` | Sachet water sample ID and results processing. |
 | 3A2 | `3A2.Sachet_Specifics.do` | Additional sachet-water-specific analysis. |
-| 3B | `3B.Sample_Map.R` | Generates sample location maps (called from `MASTER.do` via Rscript). |
+| 3B | `3B.Sample_Map.R` | Generates sample location maps (called from `0_run_all.do` via Rscript). |
 | 4A | `4A.Evaluation_Descriptive.do` | Pre-processing, descriptive statistics, kernel-density plots, and balance tables. |
 | 4B | `4B.Evaluation_Quantiative.do` | Main empirical analysis — Mn exposure and child development outcomes, including school-level exposure. |
 
@@ -107,7 +116,7 @@ This script imports lab results for 9 heavy metals (Pb, Hg, Zn, Cd, Mn, Fe, Cr, 
 
 ### `3B.Sample_Map.R`
 
-This R script generates **Figure 1** — a two-panel map of the study area and manganese concentrations at sampling locations. It is called from `MASTER.do` via `Rscript` and sets its working directory automatically to the `Codes/` folder.
+This R script generates **Figure 1** — a two-panel map of the study area and manganese concentrations at sampling locations. It is called from `0_run_all.do` via `Rscript` and sets its working directory automatically to the `Codes/` folder.
 
 **What the script does:**
 
