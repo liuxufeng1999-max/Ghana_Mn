@@ -13,7 +13,7 @@ Required: Stata 14 or higher AND R 4.1 or higher
 
 global master_loc "C:\Users\liu.7133\Github_Repo\Ghana_Mn\Codes" //<-- Change if needed
 /* global cryptomator_loc "" //<-- Change if needed * NOT USED IN THIS REPRODUCTION PACKAKGE */
-global master_loc "~/Documents/GitHub/Ghana_Mn/Codes"
+// global master_loc "~/Documents/GitHub/Ghana_Mn/Codes"
 global proc_dta_loc "../Processed Stata Dta" //<-- Relative file path, no need to change
 global R_loc "C:/Program Files\R\R-4.5.2\bin\x64\Rscript.exe" //<-- Change if needed. Run file.path(R.home("bin"), "Rscript") in R to find yours.
 cd "$master_loc" 

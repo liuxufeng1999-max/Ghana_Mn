@@ -41,14 +41,15 @@ foreach var of varlist `outcome' {
 }
 
 esttab `model' using "../Output/Tables/Table3_EPA_LOD_Mn_Exposure_ChildDev.rtf",  ///
-    stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
-		mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
-    b ci star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
-	coeflabel(2.Mn_LOD_EPA "Detected /ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
+    cells(b(fmt(3) star) ci(fmt(2) par) p(fmt(2) par)) ///
+    stats(Cov Cov_add N r2, labels("Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
+    mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
+    star(* 0.1 ** 0.05 *** 0.01) keep(2.Mn_LOD_EPA 3.Mn_LOD_EPA) ///
+    coeflabel(2.Mn_LOD_EPA "Detected \ensuremath{<} Threshold" 3.Mn_LOD_EPA "Above USEPA Threshold") ///
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
-	replace nonote label
-
-
+    collabels(none) gaps replace nonote label ///
+    addnotes("95% confidence intervals in parentheses; p-values in parentheses.")
+	
 **Continuous log-transformed Mn
 local if_cond "(focal_child_yn==1|focal_child_yn==0)"
 local cov_always "Batch treatment age_chld_months_EL i.dist_code"
@@ -84,10 +85,11 @@ foreach var of varlist `outcome' {
 	local i = `i' + 1
 }
 esttab `model' using "../Output/Tables/Table2_Continuous_Mn_Exposure_ChildDev.rtf",  ///
-    stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
-	mtitle("Child Development Score" "Child Development Score" "Child Development Score") ///
-    b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2) ///
-	replace nonote label
+    cells(b(fmt(3) star) ci(fmt(2) par) p(fmt(2) par)) ///
+    stats(Cov Cov_add N r2, labels("Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
+    mtitle("Child Development Score" "Child Development Score" "Child Development Score") ///
+    star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2) ///
+    collabels(none) gaps replace nonote label
 //
 // summ log_Mn_LODsq2 if e(sample), detail
 // 	local mn_min = r(p25)
@@ -145,12 +147,14 @@ foreach var of varlist `outcome' {
 		local model `model' `est_tit'_z_Mn_school_addcov
 	local i = `i' + 1
 }
-esttab `model'  using "../Output/Tables/TableS4_Mn_plus_SchoolExposure_ChildDev.rtf",  ///
-    stats(Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
-			mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
-    b ci star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2 *log_school_Mn_max_LODsq2 ) ///
-	coeflabel(log_Mn_LODsq2 "log(Household Mn)" log_school_Mn_max_LODsq2 "log(School Mn)" c.log_Mn_LODsq2#c.log_school_Mn_max_LODsq2 "log(Household Mn) /ensuremath{/times} log(School Mn)" ) replace nonote label noomitted
-
+esttab `model' using "../Output/Tables/TableS4_Mn_plus_SchoolExposure_ChildDev.rtf",  ///
+    cells(b(fmt(3) star) ci(fmt(2) par) p(fmt(2) par)) ///
+    stats(Cov Cov_add N r2, labels("Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
+    mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
+    star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2 *log_school_Mn_max_LODsq2) ///
+    coeflabel(log_Mn_LODsq2 "log(Household Mn)" log_school_Mn_max_LODsq2 "log(School Mn)" c.log_Mn_LODsq2#c.log_school_Mn_max_LODsq2 "log(Household Mn) \ensuremath{\times} log(School Mn)") ///
+    collabels(none) gaps replace nonote label noomitted
+	
 sum log_school_Mn_max_LODsq2 if e(sample), detail
 local sch_min  = r(p25)
 local sch_max  = r(p99)
@@ -213,12 +217,13 @@ foreach var of varlist `outcome' {
 	local i = `i' + 1
 }
 esttab `model' using "../Output/Tables/TableS5_Mn_ChildDev_by_BoysGirls.rtf",  ///
-    stats( Cov Cov_add N r2, labels( "Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
-			mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
-    b ci star(* 0.1 ** 0.05 *** 0.01) keep(*.child_male_BL *log_Mn_LODsq2) ///
-	refcat(log_Mn_LODsq2 "Girls (ref.)", nolabel) ///
-	coeflabel(1.child_male_BL#c.log_Mn_LODsq2 "Boys /ensuremath{/times} log(Household Mn)") ///
-	replace nonote label noomitted nobase
+    cells(b(fmt(3) star) ci(fmt(2) par) p(fmt(2) par)) ///
+    stats(Cov Cov_add N r2, labels("Demographic Controls" "Economic Controls" "N (Children)" "R-squared")) ///
+    mtitle("Child Development Score" "Child Development Score" "Child Development Score" "Healthier" "Healthier" "Healthier" "Advanced" "Advanced" "Advanced") ///
+    star(* 0.1 ** 0.05 *** 0.01) keep(*.child_male_BL *log_Mn_LODsq2) ///
+    refcat(log_Mn_LODsq2 "Girls (ref.)", nolabel) ///
+    coeflabel(1.child_male_BL#c.log_Mn_LODsq2 "Boys \ensuremath{\times} log(Household Mn)") ///
+    collabels(none) gaps replace nonote label noomitted nobase
 
 margins, dydx(log_Mn_LODsq2) vce(unconditional)
 	matrix M = r(b)
