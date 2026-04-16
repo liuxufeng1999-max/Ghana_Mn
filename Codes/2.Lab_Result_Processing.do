@@ -197,9 +197,9 @@ local limit "WHO_Any_higher EPA_Prim_Any_higher EPA_Sec_Any_higher any_limit_Pb_
 	qui eststo pipe: estpost sum `limit' if sample_water_source_brief == 3
 	qui eststo well: estpost sum `limit' if sample_water_source_brief==4
 	qui eststo sachet: estpost sum `limit' if sample_water_source_brief==5
-esttab all borehole river pipe well sachet using "../Output/Tables/Table1_Heavy_Metals_by_Sample_Water_Source.csv", label ///
+esttab all river sachet borehole  pipe well  using "../Output/Tables/Table1_Heavy_Metals_by_Sample_Water_Source.csv", label ///
 	star(* 0.10 ** 0.05 *** 0.01)	///
-	replace main(mean %6.2f) aux(sd) mtitle("Total" "Borehole" "River" "Piped Water" "Well" "Sachet") nonote
+	replace main(mean %6.2f) aux(sd) mtitle("Total" "River" "Sachet" "Borehole" "Piped Water" "Well") nonote
 
 	* Post-process CSV: replace "0.00" with "Below LOD" only for metal rows
 	tempname fh3 fw3
@@ -217,7 +217,7 @@ esttab all borehole river pipe well sachet using "../Output/Tables/Table1_Heavy_
 	    }
 	    * Replace "0.00" with "Below LOD" on metal mean rows
 	    if `is_metal' {
-	        local line = subinstr(`"`line'"', "0.00", "Below LOD", .)
+	        local line = subinstr(`"`line'"', "0.00", "< LOD", .)
 	    }
 	    * Replace "(0)" on SD rows only if previous row was a metal row
 	    if `prev_metal' {

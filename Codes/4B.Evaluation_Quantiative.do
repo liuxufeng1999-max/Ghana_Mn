@@ -171,7 +171,7 @@ marginsplot, ///
     ciopts(fcolor(navy%20) lcolor(navy%40) lwidth(thin)) ///
     yline(0, lpattern(dash)) ///
     xlabel(, format(%4.2f)) ///
-    ytitle("Effect of log(Household Mn)") ///
+    ytitle("Child Development Scores") ///
     xtitle("log(School Mn)") ///
 	title("") ///
 	name(SchoolMn, replace)
