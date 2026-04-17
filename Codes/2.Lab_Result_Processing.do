@@ -166,7 +166,7 @@ graph hbox Mn if river_duplicates_yn==0 & Mn<650, ///
 		box(5, fcolor(gs12) lcolor(gs8)) ///
 		box(6, fcolor(gs12) lcolor(gs8)) ///
 	ylabel(0 "Below LOD" 50 80 100 200 300 400 , labsize(medsmall)) ///
-    ytitle( "Mn ({&mu}g/L) ", size(medsmall)) ///
+    ytitle( "Mn ({&mu}gL{sup:-1}) ", size(medsmall)) ///
 	marker(1, mfcolor(gs10) mlcolor(gs10) ) ///
 	name(Mn_hbox, replace)
 
@@ -233,7 +233,7 @@ esttab all river sachet borehole  pipe well  using "../Output/Tables/Table1_Heav
 	copy "`csvtemp'" "`csvfile'"
 	erase "`csvtemp'"
 
-
+/* use "../Processed Stata dta/Lab Test Results.dta", clear */
 save "../Processed Stata dta/Lab Test Results.dta", replace
 export delimited GPS_lat GPS_long Mn Batch river_sample_yn school_sample_yn hh_sample_yn vendor_sachet_yn using "../Output/Feed_into_GEE_Test_Results_with_GPS.csv", nolab replace
 

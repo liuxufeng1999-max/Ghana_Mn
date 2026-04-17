@@ -45,7 +45,7 @@ twoway ///
     xline(80, lcolor(navy) lpattern(dash_dot)) ///
     xlabel(0 50 "USEPA" 80 "WHO" 100 150 200 250 300, angle(30) labsize(small)) ///
     ytitle("Sachet water sample") ///
-    xtitle("") ///
+    xtitle("Water Mn concentration ({&mu}gL{sup:-1})") ///
     ysize(5.5) ///
     name(Sachet_Mn_cleveland, replace)
 graph export "../Output/Figures/Fig3_Sachet_Mn_Concentration_FDARegistration_Cleveland.pdf", ///
