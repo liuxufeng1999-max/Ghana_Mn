@@ -117,7 +117,7 @@ capture drop recall_income_geq15k recall_income_1020k
 
 
 **# Descriptive Plots
-local cov "age_chld_months_EL treatment Batch i.sample_water_source"
+local cov "age_chld_months_EL treatment Batch"
 local fe "dist_code sch_id"
 capture drop z_irt_all_3048m_res
 reghdfe  z_irt_all_30_48m `cov', absorb( dist_code ) residual(z_irt_all_3048m_res)
@@ -131,17 +131,93 @@ graph export "../Output/Figures/FigS1_kdensity_z_Score_and_Mn_Limits.pdf", ///
 graph export "../Output/Figures/FigS1_kdensity_z_Score_and_Mn_Limits.svg", ///
 	name(z_irt_Mn) as(svg) replace
 
+preserve
+keep if !missing(z_irt_all_3048m_res, log_Mn_LODsq2)
+xtile mn_log_bin = log_Mn_LODsq2, nq(20)
+bysort mn_log_bin: egen mn_log_bin_x = mean(log_Mn_LODsq2)
+bysort mn_log_bin: egen z_irt_all_3048m_res_bin = mean(z_irt_all_3048m_res)
+bysort mn_log_bin: gen mn_log_bin_tag = _n == 1
+local epa_mn = log10(50)
+local who_mn = log10(80)
+local lod_b1_mn = log10(2.953/sqrt(2))
+local lod_b2_mn = log10(3.282/sqrt(2))
+twoway ///
+	(lpolyci z_irt_all_3048m_res log_Mn_LODsq2, ///
+		degree(1) lcolor(navy) lwidth(medthick) ///
+		fcolor(navy%12) alcolor(navy%0)) ///
+	(scatter z_irt_all_3048m_res_bin mn_log_bin_x if mn_log_bin_tag, ///
+		msymbol(circle) msize(medium) mcolor(navy)), ///
+	yline(0, lcolor(gs10) lpattern(shortdash)) ///
+	xline(`lod_b1_mn' `lod_b2_mn', lcolor(orange%20) ///
+		lwidth(vvvthick) lpattern(solid)) ///
+	xline(`epa_mn', lcolor(gs8) lpattern(dash)) ///
+	xline(`who_mn', lcolor(gs8) lpattern(dot)) ///
+	legend(pos(6) col(3) ///
+		order(2 "Local polynomial fit" 1 "95% CI" 3 "Binned means")) ///
+	xlabel(`=log10(2)' "2" `=log10(3)' "3" `=log10(5)' "5" ///
+		`=log10(10)' "10" `=log10(20)' "20" `=log10(50)' "50" ///
+		`=log10(80)' "80" `=log10(100)' "100" `=log10(200)' "200", ///
+		angle(0)) ///
+	xtitle("Household water Mn ({&mu}gL{sup:-1})") ///
+	ytitle("Adjusted Child Development Score") ///
+	note("Outcome residualized by age, treatment, batch, water source, and district fixed effects." ///
+		"Orange bands mark Mn = 0 replaced with batch-specific LOD/sqrt(2)." ///
+		"X-axis spacing is log{sub:10}; dashed/dotted vertical lines mark 50/80 {&mu}gL{sup:-1}.") ///
+	name(z_irt_Mn_lpoly, replace)
+graph export "../Output/Figures/FigS1b_lpolyci_z_Score_and_Mn_Exposure.pdf", ///
+	name(z_irt_Mn_lpoly) as(pdf) replace
+graph export "../Output/Figures/FigS1b_lpolyci_z_Score_and_Mn_Exposure.svg", ///
+	name(z_irt_Mn_lpoly) as(svg) replace
+restore
+
 
 **# Balance Tables
 **Compare the children (and caregivers) with Mn below LOD and Mn detected
 **Ideally, we want to have no significant differnece
+capture program drop display_iebaltab_feqp
+program define display_iebaltab_feqp
+	syntax, TABLE(string)
+
+	tempname rmat fmat
+	capture matrix `rmat' = r(iebtab_rmat)
+	if !_rc {
+		local p_col = colnumb(`rmat', "feqp")
+		if !missing(`p_col') {
+			local row_names : rownames `rmat'
+			di as text _newline "FEQ-test p-values across Mn groups: `table'"
+			forvalues row = 1/`=rowsof(`rmat')' {
+				local var_name : word `row' of `row_names'
+				local p_value = el(`rmat', `row', `p_col')
+				di as text "  `var_name': " as result %9.4f `p_value'
+			}
+		}
+	}
+
+	capture matrix `fmat' = r(iebtab_fmat)
+	if !_rc {
+		local f_cols : colnames `fmat'
+		local f_header_displayed = 0
+		foreach f_col of local f_cols {
+			if substr("`f_col'", 1, 3) == "fp_" {
+				local f_pair = substr("`f_col'", 4, .)
+				local f_pvalue = el(`fmat', 1, colnumb(`fmat', "`f_col'"))
+				if `f_header_displayed' == 0 {
+					di as text "Overall balance F-test p-values: `table'"
+					local f_header_displayed = 1
+				}
+				di as text "  Group pair `f_pair': " as result %9.4f `f_pvalue'
+			}
+		}
+	}
+end
+
 local chld_cov "child_female age_chld_months_EL stories_yn_BL counted_yn_BL played_yn_BL taken_chld_work_yn_BL hme_made_toys_yn_BL toys_shop_yn_BL hsehld_objts_yn_BL objts_ousdie_yn_BL draw_write_materials_yn_BL puzzle_yn_BL who_engage_acti_mother_BL who_engage_acti_father_BL who_engage_acti_AnoRel_BL"
 iebaltab `chld_cov', ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
                          vce(cluster caregiver_id_BL_num) ///
-                          fix(dist_code) ///
+                          fix(dist_code) ftest ///
                           savecsv("../Output/Tables/Balance_Table/TableS1_iebaltab_Mn_above_LOD_ChildCov.csv") replace
-
+display_iebaltab_feqp, table("Table S1 child covariates")
 * Replace (SD) with [SD] to prevent Excel from interpreting (numbers) as negative
 tempname fh fw
 local csvfile "../Output/Tables/Balance_Table/TableS1_iebaltab_Mn_above_LOD_ChildCov.csv"
@@ -166,14 +242,16 @@ erase "`csvtemp'"
 //                           fix(dist_code) ///
 //                           savecsv("$master_loc/Output/Tables/Balance_Table/iebaltab_Mn_above_LOD_ChildCov.csv") replace
 
+//main_lang_chld_comm_Sef_BL recall_income_bel5k nature_employ_unemp
 capture destring num_chld_hsehld_17, replace
-local caregiver_cov "prim_caregiver_female_BL age_BL nature_employ_unemp nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL school_respondent_BL"
-local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL main_lang_chld_comm_Sef_BL num_pple_hsehld_BL num_chld_hsehld_17 own_house_BL own_land_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k recall_income_bel5k"
+local caregiver_cov "prim_caregiver_female_BL age_BL  nature_employ_ag_BL nature_employ_retail_BL nature_employ_service_BL high_education_primary_BL high_education_secondary_BL high_education_SSS_higher_BL school_respondent_BL"
+local hh_cov "main_lang_chld_comm_Eng_BL main_lang_chld_comm_Twi_BL  num_pple_hsehld_BL num_chld_hsehld_17 own_house_BL own_land_BL recall_income_geq20k recall_income_geq10k recall_income_geq5k "
 iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
- grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
+ grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest  ///
                          vce(cluster caregiver_id_BL_num) ///
                           fix(dist_code) ///
-                          savecsv("../Output/Tables/Balance_Table/TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") replace
+                          savecsv("../Output/Tables/Balance_Table/TableS2_iebaltab_Mn_above_LOD_Caregiver_Household_Covar.csv") ftest replace
+display_iebaltab_feqp, table("Table S2 caregiver and household covariates")
 // iebaltab `hh_cov' `caregiver_cov' if focal_child_yn==1, ///
 //  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest onerow ///
 //                          vce(cluster caregiver_id_BL_num) ///
@@ -219,13 +297,14 @@ label var treat_drink_water_alum "\hspace{20pt} Aluminum sulfate"
 label var treat_drink_water_filt "\hspace{20pt} Filtraiton"
 label var treat_drink_water_chlor "\hspace{20pt} Chlorine"
 
-
-local water_practices "main_drink_wtr_safe treat_drink_water_yn treat_drink_water_boil treat_drink_water_alum treat_drink_water_chlor switch_drink_wtr_dry main_drink_wtr_dry_safe"
+//treat_drink_water_boil //==> onlh 3% of the group 2 households apply the boiling method
+local water_practices "main_drink_wtr_safe treat_drink_water_yn  treat_drink_water_alum treat_drink_water_chlor switch_drink_wtr_dry main_drink_wtr_dry_safe"
 iebaltab `water_practices'  if focal_child_yn==1, ///
  grpvar(Mn_LOD_EPA) rowvarlabels nonote control(1) feqtest  ///
                          vce(cluster caregiver_id_BL_num) ///
-                          fix(dist_code) ///
+                          fix(dist_code) ftest onerow ///
 						  savecsv("../Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv") replace
+display_iebaltab_feqp, table("Table S3 water safety and treatment practices")
 local csvfile "../Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method.csv"
 local csvtemp "../Output/Tables/Balance_Table/TableS3_iebaltab_Mn_above_LOD_WaterSafetyTreatment_Method_temp.csv"
 file open `fh' using "`csvfile'", read text

@@ -30,16 +30,36 @@ invisible(lapply(packages, function(pkg) {
 
 
 ## Do NOT CHANGE -- R SCRIPT IS SAVED WITH THE SAME FOLDER AS THE MASTER DO FILE
+script_file <- NULL
 if (requireNamespace("rstudioapi", quietly = TRUE) && rstudioapi::isAvailable()) {
-  setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+  script_file <- rstudioapi::getActiveDocumentContext()$path
 } else {
-  args <- commandArgs(trailingOnly = FALSE)
-  file_arg <- args[grep("--file=", args)]
-  if (length(file_arg) > 0) {
-    setwd(dirname(normalizePath(sub("--file=", "", file_arg))))
+  frame_files <- vapply(sys.frames(), function(frame) {
+    if (exists("ofile", envir = frame, inherits = FALSE)) {
+      frame_file <- get("ofile", envir = frame)
+      if (is.null(frame_file) || length(frame_file) == 0) {
+        NA_character_
+      } else {
+        frame_file[1]
+      }
+    } else {
+      NA_character_
+    }
+  }, character(1))
+  source_file <- tail(na.omit(frame_files), 1)
+  if (length(source_file) > 0) {
+    script_file <- source_file
+  } else {
+    args <- commandArgs(trailingOnly = FALSE)
+    file_arg <- args[grep("^--file=", args)]
+    if (length(file_arg) > 0) {
+      script_file <- sub("^--file=", "", file_arg[1])
+    }
   }
 }
-
+if (!is.null(script_file) && nzchar(script_file)) {
+  setwd(dirname(normalizePath(script_file)))
+}
 ##------------------------
 ## INPUT DATA
 ##------------------------
@@ -241,13 +261,13 @@ main_map <- ggplot() +
   geom_sf(data = wboundary_utm, fill = "grey90", color = "black", size = 0.6) +
   geom_sf(data = all_dist, fill = NA, color = "black", size = 0.6) +
   # Individual points colored by Mn concentration with transparency for overlap
-  geom_sf(data = points_sf_utm, aes(fill = Mn_LODsq2),
+  geom_sf(data = points_sf_utm[points_sf_utm$sample_type != "River", ], aes(fill = Mn_LODsq2), ##<== decide not to plot the river sample Mn as they are not used in the main analysis (few respondent drink river water Mn)
           shape = 21, color = "white", size = 4, alpha = 0.57, stroke = 0.3) +
   # Blue circle outline for river samples
-  geom_sf(data = points_sf_utm[points_sf_utm$sample_type == "River", ],
-          shape = 21, fill = NA, color = "blue", size = 4, stroke = 1,  alpha = 0.4) +
+  #geom_sf(data = points_sf_utm[points_sf_utm$sample_type == "River", ],
+  #        shape = 21, fill = NA, color = "blue", size = 4, stroke = 1,  alpha = 0.4) +
   scale_fill_distiller(
-    name = expression("Mn(" * mu * "g/L)"),
+    name = expression("Mn(" * mu * "gL"^-1 * ")"),
     palette = "YlOrRd",
     direction = 1,
     trans = "log",
@@ -255,7 +275,7 @@ main_map <- ggplot() +
     labels = scales::label_number(accuracy = 1)
   ) +
   labs(
-    title = expression(bold("B.") ~ "Mn Levels at Sample Points (" * mu * "g/L)"),
+    title = expression(bold("B.") ~ "Mn Levels at Sample Points (" * mu * "gL"^-1 * ")"),
     x = "Longitude", y = "Latitude"
   ) +
   theme_minimal() +
@@ -265,7 +285,10 @@ main_map <- ggplot() +
     legend.background = element_rect(fill = "white", color = NA),
     legend.box.background = element_rect(color = "black"),
     legend.text = element_text(size = 7),    # smaller legend labels
-    legend.title = element_text(size = 8, face = "bold")  # optional: smaller bold title
+    legend.title = element_text(size = 8, face = "bold"),  # optional: smaller bold title
+    legend.margin = margin(1, 1, 1, 1),
+    legend.box.margin = margin(0, 0, 0, 0),
+    plot.margin = margin(0, 0, 0, 0)
   ) +
   coord_sf(
     xlim = c(bbox_expanded["xmin"], bbox_expanded["xmax"]), #<- +/- 10km
@@ -276,13 +299,16 @@ main_map <- ggplot() +
 
 upper_panel_wrapped <- wrap_elements(full = upper_panel)
 upper_panel_wrapped <- upper_panel_wrapped & theme(plot.margin = margin(0, 0, 0, 0))
+main_map_wrapped <- wrap_elements(full = main_map)
+main_map_wrapped <- main_map_wrapped & theme(plot.margin = margin(0, 0, 0, 0))
 
 design <- "
 AAAA
-BBB#
+BBBB
 "
-combined_plot <- upper_panel_wrapped + main_map +
-  plot_layout(design = design, heights = c(1, 1))
+combined_plot <- upper_panel_wrapped + main_map_wrapped +
+  plot_layout(design = design, heights = c(0.75, 1.25)) &
+  theme(plot.margin = margin(0, 0, 0, 0))
 
 #  print(combined_plot)
 ggsave("../Output/Figures/Mn_IQR_and_Median_Grid_Map_Africa.svg",
