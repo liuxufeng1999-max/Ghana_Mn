@@ -49,7 +49,7 @@ esttab `model' using "../Output/Tables/Table3_EPA_LOD_Mn_Exposure_ChildDev.rtf",
     refcat(2.Mn_LOD_EPA "Mn Below LOD (ref.)", nolabel) ///
     collabels(none) gaps replace nonote label ///
     addnotes("95% confidence intervals in parentheses; p-values in parentheses.")
-	
+
 **Continuous log-transformed Mn
 local if_cond "(focal_child_yn==1|focal_child_yn==0)"
 local cov_always "Batch treatment age_chld_months_EL i.dist_code"
@@ -154,7 +154,7 @@ esttab `model' using "../Output/Tables/TableS4_Mn_plus_SchoolExposure_ChildDev.r
     star(* 0.1 ** 0.05 *** 0.01) keep(log_Mn_LODsq2 *log_school_Mn_max_LODsq2) ///
     coeflabel(log_Mn_LODsq2 "log(Household Mn)" log_school_Mn_max_LODsq2 "log(School Mn)" c.log_Mn_LODsq2#c.log_school_Mn_max_LODsq2 "log(Household Mn) \ensuremath{\times} log(School Mn)") ///
     collabels(none) gaps replace nonote label noomitted
-	
+
 sum log_school_Mn_max_LODsq2 if e(sample), detail
 local sch_min  = r(p25)
 local sch_max  = r(p99)
@@ -370,12 +370,16 @@ capture drop if missing(child_code)
 **In all cases, we will include full specifications (i.e., preferred model)
 **Metals: Pb Fe Cr Al Cu (Zinc is present in all water and are indeed considered beneficial for the drinking household - cite Leah's paper)
 
+capture drop Household_nonMn_conc School_nonMn_conc
 egen Household_nonMn_conc = rowmax(Pb Fe Cr Al Cu)
 label var Household_nonMn_conc "rowmax(Pb Fe Cr Al Cu)"
 egen School_nonMn_conc = rowmax(school_Pb_max school_Hg_max school_Cd_max school_Fe_max school_Cr_max school_Al_max school_Cu_max)
 label var School_nonMn_conc "rowmax(Pb_max Fe_max Cr_max Al_max Cu_max)"
 
 **Remove HH contamined metal ONLY
+
+local coef_orig_opts "mcolor(navy) ciopts(recast(rcap) lcolor(navy%45))"
+local coef_alt_opts "mcolor(maroon) ciopts(recast(rcap) lcolor(maroon%45))"
 
 
 //====Categorical Specification===//
@@ -405,13 +409,13 @@ esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPA
 	replace nonote label noomitted nobase
 
 coefplot ///
-    (GSED_Mn_EPA_addcov, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Full)) ///
-    (GSED_MnEPA_rHHPb, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Pb0)) ///
-    (GSED_MnEPA_rHHFe, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Fe0)) ///
-    (GSED_MnEPA_rHHCr, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cr0)) ///
-    (GSED_MnEPA_rHHAl, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Al0)) ///
-    (GSED_MnEPA_rHHCu, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cu0)) ///
-	(GSED_MnEPA_rHHALL, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=ALL0)), ///
+    (GSED_Mn_EPA_addcov, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Full) `coef_orig_opts') ///
+    (GSED_MnEPA_rHHPb, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Pb0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHFe, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Fe0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHCr, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cr0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHAl, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Al0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHCu, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cu0) `coef_alt_opts') ///
+	(GSED_MnEPA_rHHALL, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=ALL0) `coef_alt_opts'), ///
     vertical nooffsets ///
     yline(0, lpattern(dash)) ///
     coeflabels( ///
@@ -422,7 +426,6 @@ coefplot ///
 		Al0="Al<LOD" ///
 		Cu0="Cu<LOD" ///
 		ALL0 = "All<LOD", labsize(small)) ///
-    ciopts(recast(rcap)) ///
     legend(off) ytitle("") xtitle("Restricted Sample") ///
 	title("{bf: B}. Coefficient on {bf: 1}(Household Mn > USEPA)") ///
 	name(coefplot_rHHnonMn, replace)
@@ -456,13 +459,13 @@ esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPA
 	replace nonote label noomitted nobase
 
 coefplot ///
-    (GSED_Mn_addcov, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Full)) ///
-    (GSED_logMn_rHHPb, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Pb0)) ///
-    (GSED_logMn_rHHFe, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Fe0)) ///
-    (GSED_logMn_rHHCr, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cr0)) ///
-    (GSED_logMn_rHHAl, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Al0)) ///
-    (GSED_logMn_rHHCu, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cu0)) ///
-	(GSED_logMn_rHHALL, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=ALL0)), ///
+    (GSED_Mn_addcov, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Full) `coef_orig_opts') ///
+    (GSED_logMn_rHHPb, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Pb0) `coef_alt_opts') ///
+    (GSED_logMn_rHHFe, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Fe0) `coef_alt_opts') ///
+    (GSED_logMn_rHHCr, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cr0) `coef_alt_opts') ///
+    (GSED_logMn_rHHAl, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Al0) `coef_alt_opts') ///
+    (GSED_logMn_rHHCu, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cu0) `coef_alt_opts') ///
+	(GSED_logMn_rHHALL, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=ALL0) `coef_alt_opts'), ///
     vertical nooffsets ///
     yline(0, lpattern(dash)) ///
     coeflabels( ///
@@ -473,7 +476,6 @@ coefplot ///
 		Al0="Al<LOD" ///
 		Cu0="Cu<LOD" ///
 		ALL0 = "All<LOD", labsize(small)) ///
-    ciopts(recast(rcap)) ///
     legend(off) ytitle("")  xtitle("Restricted Sample") ///
 	title("{bf: A}. Coefficient on log(Household Mn)") ///
 	name(coefplot_rHHnonMn_log, replace)
@@ -483,7 +485,7 @@ coefplot ///
 
 graph combine ///
 	coefplot_rHHnonMn_log coefplot_rHHnonMn, ///
-	row(1) name(coefplot_rHHnonMn, replace)
+	row(1) name(coefplot_rHHnonMn, replace) xcommon ycommon
 
 cd "$master_loc"
 graph export ///
@@ -527,13 +529,13 @@ esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPA
 	replace nonote label noomitted nobase
 
 coefplot ///
-    (GSED_Mn_EPA_addcov, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Full)) ///
-    (GSED_MnEPA_rHHSchPb, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Pb0)) ///
-    (GSED_MnEPA_rHHSchFe, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Fe0)) ///
-    (GSED_MnEPA_rHHSchCr, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cr0)) ///
-    (GSED_MnEPA_rHHSchAl, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Al0)) ///
-    (GSED_MnEPA_rHHSchCu, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cu0)) ///
-	(GSED_MnEPA_rHHSchAll, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=ALL0)), ///
+    (GSED_Mn_EPA_addcov, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Full) `coef_orig_opts') ///
+    (GSED_MnEPA_rHHSchPb, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Pb0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHSchFe, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Fe0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHSchCr, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cr0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHSchAl, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Al0) `coef_alt_opts') ///
+    (GSED_MnEPA_rHHSchCu, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=Cu0) `coef_alt_opts') ///
+	(GSED_MnEPA_rHHSchAll, keep(3.Mn_LOD_EPA) rename(3.Mn_LOD_EPA=ALL0) `coef_alt_opts'), ///
     vertical nooffsets ///
     yline(0, lpattern(dash)) ///
     coeflabels( ///
@@ -544,7 +546,6 @@ coefplot ///
 		Al0="Al<LOD" ///
 		Cu0="Cu<LOD" ///
 		ALL0 = "All<LOD", labsize(small)) ///
-    ciopts(recast(rcap)) ///
     legend(off) ytitle("") xtitle("Restricted Sample") ///
 	title("{bf: B}. Coefficient on {bf: 1}(Household Mn > USEPA)") ///
 	name(coefplot_rHHSchnonMn_EPA, replace)
@@ -580,13 +581,13 @@ esttab `model' /* using "../Output/Tables/RobustnessChecks_RemoveNonMnMetals_EPA
 	replace nonote label noomitted nobase
 
 coefplot ///
-    (GSED_Mn_addcov, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Full)) ///
-    (GSED_logMn_rHHSchPb, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Pb0)) ///
-    (GSED_logMn_rHHSchFe, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Fe0)) ///
-    (GSED_logMn_rHHSchCr, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cr0)) ///
-    (GSED_logMn_rHHSchAl, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Al0)) ///
-    (GSED_logMn_rHHSchCu, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cu0)) ///
-	(GSED_logMn_rHHSchAll, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=ALL0)), ///
+    (GSED_Mn_addcov, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Full) `coef_orig_opts') ///
+    (GSED_logMn_rHHSchPb, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Pb0) `coef_alt_opts') ///
+    (GSED_logMn_rHHSchFe, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Fe0) `coef_alt_opts') ///
+    (GSED_logMn_rHHSchCr, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cr0) `coef_alt_opts') ///
+    (GSED_logMn_rHHSchAl, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Al0) `coef_alt_opts') ///
+    (GSED_logMn_rHHSchCu, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=Cu0) `coef_alt_opts') ///
+	(GSED_logMn_rHHSchAll, keep(log_Mn_LODsq2) rename(log_Mn_LODsq2=ALL0) `coef_alt_opts'), ///
     vertical nooffsets ///
     yline(0, lpattern(dash)) ///
     coeflabels( ///
@@ -597,7 +598,6 @@ coefplot ///
 		Al0="Al<LOD" ///
 		Cu0="Cu<LOD" ///
 		ALL0 = "All<LOD", labsize(small)) ///
-    ciopts(recast(rcap)) ///
     legend(off) xtitle("Restricted Sample") ytitle("") ///
 	title("{bf: A}. Coefficient on log(Household Mn)") ///
 	name(coefplot_rHHSchnonMn_log, replace)
@@ -607,7 +607,7 @@ coefplot ///
 
 graph combine ///
 	coefplot_rHHSchnonMn_log coefplot_rHHSchnonMn_EPA , ///
-	row(1) name(coefplot_rHHSchnonMn, replace)
+	row(1) name(coefplot_rHHSchnonMn, replace)  xcommon ycommon
 
 cd "$master_loc"
 graph export "../Output/Figures/FigS3_RobustnessChecks_RemoveNonMn_HouseholdSchoolWater_Coefplot_logMnUSEPA.pdf", ///

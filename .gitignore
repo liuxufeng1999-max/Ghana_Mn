@@ -1,3 +1,8 @@
+# DHS 2022 raw data folders (large/sensitive files - not tracked)
+Original Data/GHA_DHS_2022/GHBR8CDT/
+Original Data/GHA_DHS_2022/GHHR8CDT/
+Original Data/GHA_DHS_2022/GHKR8CDT/
+
 # Data files
 *.dta
 *.csv
@@ -11,15 +16,15 @@
 *.RData
 
 # Output files
-*.log
-*.png
-*.pdf
-*.jpg
-*.jpeg
-*.svg
-*.eps
-*.tif
-*.tiff
+# *.log
+# *.png
+# *.pdf
+# *.jpg
+# *.jpeg
+# *.svg
+# *.eps
+# *.tif
+# *.tiff
 
 # Tables and results
 *.tex

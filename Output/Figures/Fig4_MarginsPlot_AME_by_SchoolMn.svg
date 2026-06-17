@@ -479,7 +479,7 @@
 	<text x="529.71" y="832.39" style="font-family:'Helvetica';font-size:112.56px;fill:#000000" text-anchor="end">0</text>
 	<line x1="597.21" y1="184.61" x2="552.15" y2="184.61" style="stroke:#000000;stroke-width:6.48"/>
 	<text x="529.71" y="224.05" style="font-family:'Helvetica';font-size:112.56px;fill:#000000" text-anchor="end">.5</text>
-	<text x="214.55" y="1439.94" style="font-family:'Helvetica';font-size:112.56px;fill:#000000" transform="rotate(-90 214.55,1439.94)" text-anchor="middle">Effect of log(Household Mn)</text>
+	<text x="214.55" y="1439.94" style="font-family:'Helvetica';font-size:112.56px;fill:#000000" transform="rotate(-90 214.55,1439.94)" text-anchor="middle">Child Development Scores</text>
 	<line x1="597.21" y1="2766.66" x2="5286.60" y2="2766.66" style="stroke:#000000;stroke-width:6.48"/>
 	<line x1="668.42" y1="2766.66" x2="668.42" y2="2811.54" style="stroke:#000000;stroke-width:6.48"/>
 	<text x="668.42" y="2912.86" style="font-family:'Helvetica';font-size:112.56px;fill:#000000" text-anchor="middle">0.75</text>

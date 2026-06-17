@@ -472,6 +472,8 @@ foreach var of varlist `metals' {
 	drop `var'_borehole_mean_t `var'_borehole_mean
 }
 gen lost_in_watersample = caregiver_id_EL=="100151011P2" | caregiver_id_EL=="110025106P1" | caregiver_id_EL=="100110081P2"
+replace sample_water_source = 1 if lost_in_watersample==1
+replace sample_water_source_1 = 1 if lost_in_watersample==1
 assert new_village_id == "50D" if caregiver_id_EL=="100151011P2" | caregiver_id_EL=="110025106P1"
 assert Batch==1 if new_village_id=="50D" & sample_water_source==1 //-->all borehole sample are in batch 1 for village_id=="50D"
 replace Batch = 1 if missing(Batch)
