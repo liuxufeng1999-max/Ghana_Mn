@@ -73,30 +73,35 @@ preserve
 	export delimited using ///
 		"../Output/Tables/TableS_Mn_Cutoff_Robustness_Estimates.csv", replace
 
+	gen cutoff_plot = cutoff
+	replace cutoff_plot = cutoff - 0.8 if contrast == "Detected <= cutoff"
+	replace cutoff_plot = cutoff + 0.8 if contrast == "Above cutoff"
+
 	twoway ///
-		(rcap ub lb cutoff if contrast == "Detected <= cutoff" & cutoff != 50, ///
+		(rcap ub lb cutoff_plot if contrast == "Detected <= cutoff" & cutoff != 50, ///
 			lcolor(maroon%35)) ///
-		(scatter b cutoff if contrast == "Detected <= cutoff" & cutoff != 50, ///
+		(scatter b cutoff_plot if contrast == "Detected <= cutoff" & cutoff != 50, ///
 			mcolor(maroon) msymbol(circle) msize(medium)) ///
-		(rcap ub lb cutoff if contrast == "Above cutoff" & cutoff != 50, ///
+		(rcap ub lb cutoff_plot if contrast == "Above cutoff" & cutoff != 50, ///
 			lcolor(maroon%35)) ///
-		(scatter b cutoff if contrast == "Above cutoff" & cutoff != 50, ///
+		(scatter b cutoff_plot if contrast == "Above cutoff" & cutoff != 50, ///
 			mcolor(maroon) msymbol(square) msize(medium)) ///
-		(rcap ub lb cutoff if contrast == "Detected <= cutoff" & cutoff == 50, ///
+		(rcap ub lb cutoff_plot if contrast == "Detected <= cutoff" & cutoff == 50, ///
 			lcolor(navy%45)) ///
-		(rcap ub lb cutoff if contrast == "Above cutoff" & cutoff == 50, ///
+		(rcap ub lb cutoff_plot if contrast == "Above cutoff" & cutoff == 50, ///
 			lcolor(navy%45)) ///
-		(scatter b cutoff if cutoff == 50 & contrast == "Detected <= cutoff", ///
-			msymbol(diamond) msize(large) mcolor(navy)) ///
-		(scatter b cutoff if cutoff == 50 & contrast == "Above cutoff", ///
-			msymbol(diamond) msize(large) mcolor(navy)), ///
+		(scatter b cutoff_plot if cutoff == 50 & contrast == "Detected <= cutoff", ///
+			msymbol(circle) msize(medium) mcolor(navy)) ///
+		(scatter b cutoff_plot if cutoff == 50 & contrast == "Above cutoff", ///
+			msymbol(square) msize(medium) mcolor(navy)), ///
 		xline(50, lpattern(shortdash) lcolor(gs8)) ///
 		yline(0, lpattern(dash) lcolor(gs10)) ///
+		xscale(range(28 82)) ///
 		xlabel(30(10)80) ///
 		xtitle("Mn cutoff ({&mu}gL{sup:-1})") ///
 		ytitle("Estimate relative to Mn below LOD") ///
 		legend(order(2 "Detected <= cutoff" 4 "Above cutoff" ///
-			7 "Original cutoff = 50") pos(6) col(3)) ///
+			7 "Original cutoff = 50{&mu}gL{sup:-1} (USEPA)") pos(6) col(3)) ///
 		graphregion(color(white)) plotregion(color(white)) ///
 		name(Mn_cutoff_robustness, replace)
 		/* note("Dashed vertical line and diamond markers identify cutoff = 50 {&mu}gL{sup:-1}.") /// */
@@ -339,6 +344,8 @@ preserve
 		name(Mn_alt_spec_coefplot) as(svg) replace
 restore
 
+codebook caregiver_id if switch_drink_wtr_dry==1
+codebook caregiver_id if switch_drink_wtr_dry==0
 **# Heterogeneity for switchers
 **switchers during the dry season: switch_drink_wtr_dry
 **see if the switchers are different given their current Mn exposure
